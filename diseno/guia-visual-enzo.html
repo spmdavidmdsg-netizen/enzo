@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guía visual de Enzo</title>
+<style>
+/* ============================================================
+   Propuesta visual de Enzo con el lenguaje Liquid Glass
+   (iOS 27 en el celular, macOS 27 en la Mac).
+   Todo lo que ves aquí es la receta real que llevaríamos a la app.
+   ============================================================ */
+:root{
+  --accent:#2798F5;
+  --ease-out:cubic-bezier(.23,1,.32,1);
+  /* Resorte con un pequeño rebote, como los controles de iOS 27 */
+  --spring:linear(0,.009,.035 2.1%,.141 4.4%,.723 12.9%,.938 16.7%,1.017 20.5%,1.043 24.8%,1.035 28.4%,1 39.7%,.993 47.3%,1);
+  --bg:linear-gradient(160deg,#1c1e27 0%,#0a0b0f 45%,#000 88%);
+  --solid:#050507;
+  --ink:#f4f4f5; --ink2:rgba(244,244,245,.72); --ink3:rgba(244,244,245,.52);
+  --card:rgba(255,255,255,.06); --line:rgba(255,255,255,.1);
+  /* Vidrio */
+  --g-fill:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.05));
+  --g-tint:linear-gradient(180deg,rgba(40,42,50,.78),rgba(22,23,28,.86));
+  --g-spec:rgba(255,255,255,.5);
+  --g-rim:rgba(255,255,255,.14);
+  --g-edge:rgba(0,0,0,.45);
+  --g-shadow:0 10px 30px -8px rgba(0,0,0,.55),0 2px 6px rgba(0,0,0,.25);
+  --fill:#f4f4f5; --on-fill:#0b0b0c;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:linear-gradient(160deg,#ffffff 0%,#f2f4f7 55%,#e8ecf1 100%);
+  --solid:#eef1f5;
+  --ink:#0b0d10; --ink2:rgba(11,13,16,.7); --ink3:rgba(11,13,16,.5);
+  --card:#fff; --line:rgba(15,30,50,.1);
+  --g-fill:linear-gradient(180deg,rgba(255,255,255,.72),rgba(255,255,255,.42));
+  --g-tint:linear-gradient(180deg,rgba(255,255,255,.92),rgba(246,248,251,.94));
+  --g-spec:rgba(255,255,255,.95);
+  --g-rim:rgba(255,255,255,.7);
+  --g-edge:rgba(20,40,70,.16);
+  --g-shadow:0 12px 30px -10px rgba(28,60,104,.32),0 2px 6px rgba(28,60,104,.1);
+  --fill:#0b0d10; --on-fill:#f6f8fb;
+  color-scheme:light;
+}
+*{box-sizing:border-box;margin:0}
+body{font:400 15px/1.55 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;color:var(--ink);background:var(--solid);-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0;background:var(--bg);z-index:-1}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- la receta del vidrio ---------- */
+.glass{
+  position:relative;isolation:isolate;
+  background:var(--g-fill);
+  -webkit-backdrop-filter:blur(14px) saturate(1.9) brightness(1.06);
+  backdrop-filter:blur(14px) saturate(1.9) brightness(1.06);
+  box-shadow:
+    inset 0 1px 0 var(--g-spec),            /* brillo especular del borde superior */
+    inset 0 -1px 0 rgba(255,255,255,.06),
+    inset 0 0 0 1px var(--g-rim),           /* aro de luz */
+    0 0 0 .5px var(--g-edge),               /* borde oscurecido (iOS 27) */
+    var(--g-shadow);
+}
+/* Reflejo que sigue al cursor o al dedo: simula cómo la luz se mueve sobre el vidrio */
+.glass::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:-1;
+  background:radial-gradient(120px 80px at var(--mx,30%) var(--my,0%),rgba(255,255,255,.22),transparent 70%);opacity:.9;transition:opacity 300ms ease}
+.glass.tint{background:var(--g-tint)}
+.press{transition:transform 420ms var(--spring)}
+.press:active{transform:scale(.94);transition-duration:120ms;transition-timing-function:var(--ease-out)}
+
+/* ---------- página ---------- */
+.wrap{max-width:1180px;margin:0 auto;padding:40px 24px 90px}
+header.top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:46px}
+header.top h1{font-size:30px;font-weight:700;letter-spacing:-.025em}
+header.top p{color:var(--ink2);max-width:62ch;margin-top:6px}
+h2{font-size:22px;font-weight:700;letter-spacing:-.02em;margin:0 0 6px}
+.lead{color:var(--ink2);max-width:66ch;margin-bottom:24px}
+section{margin-top:72px}
+.cap{display:inline-flex;align-items:center;height:38px;padding:0 17px;border-radius:999px;font-size:13.5px;font-weight:600}
+
+/* principios */
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:28px 34px}
+.rule b{display:block;font-size:15.5px;margin-bottom:4px}
+.rule p{color:var(--ink2);font-size:14px}
+.rule .demo{height:86px;border-radius:20px;margin-bottom:14px;position:relative;overflow:hidden;background:repeating-linear-gradient(135deg,rgba(255,255,255,.05) 0 14px,transparent 14px 28px),var(--card);border:1px solid var(--line)}
+.rule .demo .glass{position:absolute}
+
+/* ---------- maquetas ---------- */
+.stage{display:flex;flex-wrap:wrap;gap:34px;justify-content:center;align-items:flex-start}
+.cap-tag{color:var(--ink3);font-size:12.5px;text-align:center;margin-top:12px}
+/* iPhone */
+.phone{width:372px;height:780px;border-radius:56px;padding:11px;background:#1d1e23;box-shadow:inset 0 0 0 2px #34353b,0 30px 70px -30px rgba(0,0,0,.6)}
+.screen{position:relative;height:100%;border-radius:46px;overflow:hidden;background:var(--bg),var(--solid)}
+.island{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:104px;height:31px;border-radius:20px;background:#000;z-index:9}
+.status{position:absolute;top:16px;left:30px;right:28px;display:flex;justify-content:space-between;font-size:13.5px;font-weight:600;z-index:8}
+.scroll{position:absolute;inset:0;overflow-y:auto;padding:104px 16px 120px;scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
+.p-top{position:absolute;top:52px;left:14px;right:14px;display:flex;justify-content:space-between;align-items:center;z-index:7}
+.me{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:600;font-size:13px}
+.p-h1{font-size:21px;font-weight:700;letter-spacing:-.02em}
+.p-h{font-size:12.5px;font-weight:600;color:var(--ink3);margin:20px 0 9px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.qt{height:112px;border-radius:18px;padding:13px;background:var(--card);border:1px solid var(--line);position:relative;display:flex;flex-direction:column;justify-content:space-between;font-weight:600;font-size:14px}
+.qt i{position:absolute;top:12px;right:12px;width:20px;height:20px;border-radius:50%;border:1.5px solid var(--ink3)}
+.qt small{font-weight:500;font-size:11.5px;color:var(--ink3)}
+.qt.late small{color:#ff8a80}
+.row{display:flex;justify-content:space-between;padding:11px 0;border-top:1px solid var(--line);font-size:14px}
+.row span:last-child{color:var(--ink3)}
+.fab{position:absolute;right:18px;bottom:30px;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;z-index:7}
+.fab i{width:19px;height:19px;border-radius:50%;border:2.5px solid var(--ink)}
+.fab.solid{background:var(--fill)}
+.fab.solid i{border-color:var(--on-fill)}
+/* barra de Rutina que se minimiza al desplazar */
+.tabbar{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);display:flex;gap:2px;padding:5px;border-radius:999px;z-index:7;transition:padding 420ms var(--spring)}
+.tabbar button{position:relative;z-index:1;padding:12px 18px;border-radius:999px;font-size:14px;font-weight:600;color:var(--ink2);white-space:nowrap;transition:color 260ms ease,max-width 420ms var(--spring),padding 420ms var(--spring),opacity 260ms ease;max-width:140px;overflow:hidden}
+.tabbar button[aria-current="true"]{color:var(--on-fill)}
+.tabbar .sel{position:absolute;top:5px;bottom:5px;border-radius:999px;background:var(--fill);z-index:0}
+.tabbar.min button:not([aria-current="true"]){max-width:0;padding-inline:0;opacity:0}
+/* rutina */
+.mode{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 15px;border-radius:999px;font-size:13px;font-weight:600;transition:width 380ms var(--spring)}
+.mode span{display:inline-block;white-space:nowrap}
+.mode span.swap{animation:swap 340ms var(--ease-out)}
+@keyframes swap{from{opacity:0;transform:translateY(7px);filter:blur(4px)}}
+.bk{display:grid;grid-template-columns:22px 1fr auto;gap:12px;align-items:center;padding:11px 13px;border-radius:16px;font-weight:600;font-size:14px;margin-bottom:7px}
+.bk i{width:20px;height:20px;border-radius:50%;border:1.5px solid currentColor}
+.bk i.on{background:currentColor}
+.bk time{font-size:11.5px;text-align:right;opacity:.85}
+.bk small{display:block;font-size:11.5px;font-weight:500;opacity:.75}
+.bk.core{box-shadow:0 0 0 1.5px var(--solid),0 0 0 3px var(--ink)}
+.r-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.btn{display:inline-flex;align-items:center;height:36px;padding:0 15px;border-radius:999px;font-size:13px;font-weight:600}
+.btn.primary{background:var(--fill);color:var(--on-fill)}
+/* hoja que nace del botón */
+.sheet{position:absolute;z-index:8;border-radius:30px;padding:20px 18px;overflow:hidden;opacity:0;pointer-events:none}
+.sheet.open{opacity:1;pointer-events:auto}
+.sheet .grab{width:38px;height:5px;border-radius:3px;background:rgba(127,127,127,.5);margin:-8px auto 14px}
+.sheet h3{font-size:19px;font-weight:700;margin-bottom:14px}
+.field{border-radius:14px;padding:11px 13px;background:rgba(127,127,127,.12);font-size:14px;color:var(--ink2);margin-bottom:9px}
+.scrim{position:absolute;inset:0;z-index:7;background:rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:opacity 300ms ease}
+.scrim.on{opacity:1;pointer-events:auto}
+/* Mac */
+.mac{width:min(760px,100%);border-radius:18px;overflow:hidden;box-shadow:0 0 0 1px rgba(127,127,127,.25),0 40px 90px -30px rgba(0,0,0,.6)}
+.mac-bar{height:40px;display:flex;align-items:center;gap:8px;padding:0 16px;background:var(--bg),var(--solid);border-bottom:1px solid var(--line)}
+.mac-bar i{width:12px;height:12px;border-radius:50%;background:#ff5f57}.mac-bar i:nth-child(2){background:#febc2e}.mac-bar i:nth-child(3){background:#28c840}
+.mac-body{position:relative;height:470px;background:var(--bg),var(--solid);padding:22px 30px;overflow:hidden}
+.mac-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
+.mac-cols{display:grid;grid-template-columns:1.55fr 1fr;gap:34px}
+.mac .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
+.mac .qt{height:120px}
+.seg3{display:inline-flex;position:relative;padding:4px;border-radius:999px;margin-bottom:20px}
+.seg3 button{position:relative;z-index:1;padding:8px 20px;border-radius:999px;font-size:13.5px;font-weight:600;color:var(--ink2);transition:color 260ms ease}
+.seg3 button[aria-current="true"]{color:var(--on-fill)}
+.seg3 .sel{position:absolute;top:4px;bottom:4px;border-radius:999px;background:var(--fill)}
+
+/* ---------- catálogo de componentes ---------- */
+.parts{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+.part{border-radius:24px;padding:22px;min-height:170px;background:repeating-linear-gradient(135deg,rgba(127,127,127,.06) 0 16px,transparent 16px 32px),var(--card);border:1px solid var(--line);display:flex;flex-direction:column;gap:16px}
+.part .show{flex:1;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
+.part b{font-size:14.5px}
+.part p{font-size:13px;color:var(--ink2);margin-top:2px}
+.search{display:flex;align-items:center;gap:10px;height:50px;width:100%;padding:0 18px;border-radius:999px;color:var(--ink2)}
+.sw{position:relative;width:52px;height:31px;border-radius:999px;background:rgba(127,127,127,.28);transition:background 260ms ease}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:38px;height:25px;border-radius:999px;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.25);transition:transform 420ms var(--spring),width 260ms var(--ease-out)}
+.sw:active::after{width:44px}
+.sw[aria-checked="true"]{background:#34c759}
+.sw[aria-checked="true"]::after{transform:translateX(15px)}
+.sw[aria-checked="true"]:active::after{transform:translateX(9px)}
+.toast{display:inline-flex;align-items:center;gap:16px;height:46px;padding:0 20px;border-radius:999px;font-size:14px}
+.toast b{color:var(--accent);font-weight:600}
+
+/* tabla de movimiento y tokens */
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:12px 10px;border-top:1px solid var(--line);vertical-align:top}
+th{font-size:12.5px;color:var(--ink3);font-weight:600;border-top:0}
+td:first-child{font-weight:600;white-space:nowrap}
+code{font:12.5px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--ink2)}
+.refs{display:grid;gap:8px;font-size:14px}
+.refs a{color:var(--ink);text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.note{color:var(--ink3);font-size:13px;margin-top:14px;max-width:72ch}
+.theme{display:flex;gap:6px;padding:4px;border-radius:999px}
+.theme button{padding:8px 16px;border-radius:999px;font-size:13.5px;font-weight:600;color:var(--ink2)}
+.theme button[aria-pressed="true"]{background:var(--fill);color:var(--on-fill)}
+
+/* tipografía, tamaños y temas */
+.two-col{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:30px}
+.two-col h3{font-size:15px;font-weight:700;margin-bottom:10px}
+.spec{border-radius:22px;padding:20px 22px;background:var(--card);border:1px solid var(--line)}
+.spec .ln{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:9px 0;border-top:1px solid var(--line)}
+.spec .ln:first-of-type{border-top:0}
+.spec .ln em{font-style:normal;font-size:12px;color:var(--ink3);white-space:nowrap}
+.ok{color:#34c759;font-weight:700}.fix{color:#ff9f0a;font-weight:700}
+.sizes{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-end}
+.sizes figure{display:flex;flex-direction:column;align-items:center;gap:8px;margin:0}
+.sizes figcaption{font-size:12px;color:var(--ink3);text-align:center}
+.hit{position:relative;display:grid;place-items:center}
+.hit::before{content:"";position:absolute;width:44px;height:44px;border-radius:12px;border:1.5px dashed #ff9f0a}
+.dot22{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--ink2)}
+.scale{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap}
+.scale div{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;color:var(--ink3)}
+.scale i{display:block;background:var(--accent);border-radius:3px;width:var(--s);height:var(--s);opacity:.85}
+.swatch{display:inline-flex;align-items:center;gap:8px}
+.swatch i{width:18px;height:18px;border-radius:6px;display:block;box-shadow:inset 0 0 0 1px rgba(127,127,127,.4)}
+@media (max-width:820px){.mac-cols{grid-template-columns:1fr}.mac .grid3{grid-template-columns:1fr 1fr}.mac-body{height:auto}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div>
+    <h1>Guía visual de Enzo</h1>
+    <p>Enzo con Liquid Glass y las reglas de Apple para tipografía, espaciado, tamaños y tema claro y oscuro: iOS 27 en el iPhone y macOS 27 en la Mac. Todo lo de esta página es interactivo; toca, desplaza y pasa el cursor.</p>
+  </div>
+  <div class="theme glass" role="group" aria-label="Tema"><button data-t="dark" aria-pressed="true">Oscuro</button><button data-t="light" aria-pressed="false">Claro</button></div>
+</header>
+
+<section style="margin-top:0">
+  <h2>Cinco reglas del estilo</h2>
+  <p class="lead">Liquid Glass no es "todo transparente". Es una capa de controles de vidrio que flota sobre tu contenido. El contenido (tus pendientes, tu rutina) se queda sólido y legible.</p>
+  <div class="rules">
+    <div class="rule"><div class="demo"><div class="glass cap" style="left:18px;top:22px">Pendientes</div><div class="glass" style="right:18px;bottom:16px;width:44px;height:44px;border-radius:50%"></div></div>
+      <b>El vidrio es solo para controles</b><p>Menú, botón de captura, barra de Rutina, buscador y hojas. Las tarjetas y bloques son contenido: sólidos, nunca vidrio sobre vidrio.</p></div>
+    <div class="rule"><div class="demo"><div class="glass" style="inset:14px;border-radius:24px"><div class="glass tint" style="position:absolute;inset:10px;border-radius:14px"></div></div></div>
+      <b>Cápsulas y esquinas concéntricas</b><p>Los botones son cápsulas (radio = mitad de su altura). Lo que va dentro de otra pieza resta el margen a su radio, para que las curvas sean paralelas.</p></div>
+    <div class="rule"><div class="demo" style="display:grid;place-items:center"><div class="glass cap" style="position:relative;height:46px;padding:0 26px">Brillo y borde</div></div>
+      <b>Brillo arriba, borde oscuro alrededor</b><p>Una línea de luz en el borde superior y, como en iOS 27, un borde ligeramente oscurecido que separa el vidrio del fondo y mejora la lectura.</p></div>
+    <div class="rule"><div class="demo" style="display:flex;gap:12px;align-items:center;justify-content:center"><div class="glass cap" style="position:relative">Claro</div><div class="glass tint cap" style="position:relative">Tintado</div></div>
+      <b>Claro o tintado</b><p>iOS 27 agrega un control "de ultra claro a totalmente tintado". En Enzo lo replicamos en Ajustes: Claro para más brillo, Tintado para más contraste.</p></div>
+    <div class="rule"><div class="demo" style="display:grid;place-items:center"><button class="glass cap press" style="position:relative;height:46px;padding:0 24px">Presióname</button></div>
+      <b>Movimiento elástico</b><p>Al presionar, el control se comprime y regresa con un pequeño rebote. Las selecciones se deslizan y se estiran como gel; las hojas nacen del botón que las abre.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>iPhone · iOS 27</h2>
+  <p class="lead">Desplaza dentro de los teléfonos: el contenido pasa por debajo del vidrio y se difumina. En Rutina, la barra se encoge al bajar y vuelve al subir, como la de Apple. Toca el círculo para ver la hoja nacer del botón.</p>
+  <div class="stage">
+    <div><div class="phone"><div class="screen" id="s-pend">
+      <div class="island"></div><div class="status"><span>9:41</span><span>●●●</span></div>
+      <div class="p-top"><div class="me glass">D</div><div class="cap glass">Pendientes</div></div>
+      <div class="scroll">
+        <div class="p-h1">Domingo 15 de noviembre</div>
+        <div class="p-h">Quick tasks</div>
+        <div class="grid2">
+          <div class="qt late"><i></i>Pagar tarjeta<small>Vencida · ayer</small></div>
+          <div class="qt"><i></i>Examen de inglés<small>Hoy</small></div>
+          <div class="qt"><i></i>Regar las plantas<small>Hoy · cada 3 días</small></div>
+          <div class="qt"><i></i>Comprar regalo<small>Hoy</small></div>
+          <div class="qt"><i></i>Llamar a mamá<small>Sin fecha</small></div>
+        </div>
+        <div class="p-h">Próximas</div>
+        <div class="row"><span>Renovar licencia</span><span>20 nov</span></div>
+        <div class="row"><span>Cita con el dentista</span><span>24 nov</span></div>
+        <div class="row"><span>Pagar renta</span><span>30 nov</span></div>
+        <div class="p-h">Esperando</div>
+        <div class="row"><span>Reembolso de la aseguradora</span><span>18 nov</span></div>
+      </div>
+      <div class="scrim" id="scrim"></div>
+      <div class="sheet glass tint" id="sheet"><div class="grab"></div><h3>Nuevo pendiente</h3><div class="field">¿Qué tienes pendiente?</div><div class="field">Fecha · Hoy</div><div class="field">Repetir cada · No se repite</div><div style="display:flex;justify-content:flex-end;margin-top:14px"><button class="btn primary press" id="sheet-ok">Listo</button></div></div>
+      <button class="fab glass press" id="fab" aria-label="Nuevo pendiente"><i></i></button>
+    </div></div><p class="cap-tag">Pendientes · botón de captura en vidrio</p></div>
+
+    <div><div class="phone"><div class="screen">
+      <div class="island"></div><div class="status"><span>9:41</span><span>●●●</span></div>
+      <div class="p-top"><div class="me glass">D</div><div class="cap glass">Rutina</div></div>
+      <div class="scroll" id="r-scroll">
+        <div class="r-head"><div class="p-h1">Rutina de hoy</div><button class="btn glass press">Editar rutina</button></div>
+        <div style="margin-bottom:14px"><button class="mode glass press" id="mode"><span>Performance</span><svg viewBox="0 0 16 16"><path d="M4 6h8l-2.5-2.5M12 10H4l2.5 2.5"/></svg></button></div>
+        <div id="r-list"></div>
+      </div>
+      <nav class="tabbar glass" id="tabbar"><span class="sel"></span><button aria-current="true">Rutina</button><button aria-current="false">Resumen</button><button aria-current="false">Ejercicio</button></nav>
+    </div></div><p class="cap-tag">Rutina · barra que se encoge al desplazar</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Mac · macOS 27</h2>
+  <p class="lead">El mismo menú de píldora arriba a la derecha. En la Mac el vidrio es más sutil: más contenido a la vista y controles más compactos. Pasa el cursor sobre el vidrio para ver cómo se mueve el reflejo.</p>
+  <div class="stage"><div class="mac">
+    <div class="mac-bar"><i></i><i></i><i></i></div>
+    <div class="mac-body">
+      <div class="mac-top"><div class="me glass">D</div><div class="cap glass">Pendientes</div></div>
+      <div class="mac-cols">
+        <div><div class="p-h1" style="font-size:26px">Domingo 15 de noviembre</div><div class="p-h">Quick tasks</div>
+          <div class="grid3"><div class="qt late"><i></i>Pagar tarjeta<small>Vencida · ayer</small></div><div class="qt"><i></i>Examen de inglés<small>Hoy</small></div><div class="qt"><i></i>Regar las plantas<small>Hoy · cada 3 días</small></div><div class="qt"><i></i>Comprar regalo<small>Hoy</small></div><div class="qt"><i></i>Llamar a mamá<small>Sin fecha</small></div></div></div>
+        <div><div class="p-h" style="margin-top:44px">Próximas</div><div class="row"><span>Renovar licencia</span><span>20 nov</span></div><div class="row"><span>Cita con el dentista</span><span>24 nov</span></div><div class="row"><span>Pagar renta</span><span>30 nov</span></div><div class="p-h">Esperando</div><div class="row"><span>Reembolso</span><span>18 nov</span></div></div>
+      </div>
+      <button class="fab glass press" style="right:26px;bottom:24px;width:52px;height:52px" aria-label="Nuevo pendiente"><i></i></button>
+    </div>
+  </div></div>
+  <div class="stage" style="margin-top:28px"><div class="mac">
+    <div class="mac-bar"><i></i><i></i><i></i></div>
+    <div class="mac-body" style="height:400px">
+      <div class="mac-top"><div class="me glass">D</div><div class="cap glass">Rutina</div></div>
+      <div style="max-width:560px;margin:0 auto">
+        <div class="seg3 glass" id="seg3"><span class="sel"></span><button aria-current="true">Rutina</button><button aria-current="false">Resumen</button><button aria-current="false">Ejercicio</button></div>
+        <div class="r-head"><div class="p-h1" style="font-size:24px">Rutina de hoy</div><button class="btn glass press">Editar rutina</button></div>
+        <div id="r-list-mac"></div>
+      </div>
+    </div>
+  </div></div>
+  <p class="cap-tag">En la Mac la barra Rutina · Resumen · Ejercicio va arriba; su selección se desliza con efecto de gel.</p>
+</section>
+
+<section>
+  <h2>Componentes</h2>
+  <p class="lead">Cada pieza con su comportamiento. Presiona los botones y el interruptor para sentir el resorte.</p>
+  <div class="parts">
+    <div class="part"><div class="show"><button class="cap glass press">Pendientes</button></div><div><b>Menú de página</b><p>Cápsula de vidrio. Toca para cambiar de página; mantén para ver la lista.</p></div></div>
+    <div class="part"><div class="show"><button class="fab glass press" style="position:relative;right:auto;bottom:auto"><i></i></button><button class="fab solid press" style="position:relative;right:auto;bottom:auto"><i></i></button></div><div><b>Botón de captura</b><p>Círculo de vidrio (propuesto) o sólido (actual). El vidrio se integra mejor al estilo.</p></div></div>
+    <div class="part"><div class="show"><button class="btn primary press">Listo</button><button class="btn glass press">Editar rutina</button></div><div><b>Botones</b><p>Primario sólido para la acción principal; vidrio para las secundarias.</p></div></div>
+    <div class="part"><div class="show"><button class="mode glass press" id="mode2"><span>Performance</span><svg viewBox="0 0 16 16"><path d="M4 6h8l-2.5-2.5M12 10H4l2.5 2.5"/></svg></button></div><div><b>Botón de vista</b><p>Un toque cambia el texto y la información. El texto entra con un leve desenfoque.</p></div></div>
+    <div class="part"><div class="show"><button class="sw" role="switch" aria-checked="true" id="sw" aria-label="Importante"></button></div><div><b>Interruptor</b><p>Como en iOS 27: la perilla se estira al presionarla y rebota al soltarla.</p></div></div>
+    <div class="part"><div class="show"><div class="search glass"><svg viewBox="0 0 20 20"><circle cx="9" cy="9" r="6"/><path d="M13.5 13.5L17 17"/></svg>Buscar pendientes…</div></div><div><b>Buscador</b><p>Barra de vidrio que baja desde arriba; resultados en un panel tintado para que se lean bien.</p></div></div>
+    <div class="part"><div class="show"><div class="toast glass tint">Pendiente hecho <b>Deshacer</b></div></div><div><b>Aviso</b><p>Cápsula tintada que sube desde abajo y se va sola.</p></div></div>
+  </div>
+</section>
+
+<section>
+  <h2>Tipografía</h2>
+  <p class="lead">Apple usa la letra del sistema (SF Pro) con una escala fija de estilos. En el iPhone el texto base es de 17 pt y el mínimo 11 pt; en la Mac el base es 13 pt y el mínimo 10 pt. Como pediste textos más chicos en el celular, propongo una escala compacta que usa los mismos estilos de Apple, solo que un escalón abajo.</p>
+  <div class="two-col">
+    <div><h3>iPhone</h3><div class="spec">
+      <div class="ln"><span style="font-size:22px;font-weight:700;letter-spacing:-.02em">Título de página</span><em>22 · Bold · Title 2</em></div>
+      <div class="ln"><span style="font-size:15px;font-weight:600">Nombre de un pendiente</span><em>15 · Semibold · Subhead</em></div>
+      <div class="ln"><span style="font-size:15px">Texto de notas y listas</span><em>15 · Regular · Subhead</em></div>
+      <div class="ln"><span style="font-size:13px;font-weight:600;color:var(--ink2)">Encabezado de sección</span><em>13 · Semibold · Footnote</em></div>
+      <div class="ln"><span style="font-size:12px;color:var(--ink2)">Fecha, tolerancia, datos</span><em>12 · Regular · Caption 1</em></div>
+      <div class="ln"><span style="font-size:11px;color:var(--ink2)">Lo más pequeño permitido</span><em>11 · Caption 2 (mínimo)</em></div>
+    </div></div>
+    <div><h3>Mac</h3><div class="spec">
+      <div class="ln"><span style="font-size:26px;font-weight:700;letter-spacing:-.02em">Título de página</span><em>26 · Bold · Large Title</em></div>
+      <div class="ln"><span style="font-size:15px;font-weight:600">Nombre de un pendiente</span><em>15 · Semibold · Title 3</em></div>
+      <div class="ln"><span style="font-size:13px">Texto de notas y listas</span><em>13 · Regular · Body</em></div>
+      <div class="ln"><span style="font-size:13px;font-weight:700;color:var(--ink2)">Encabezado de sección</span><em>13 · Bold · Headline</em></div>
+      <div class="ln"><span style="font-size:11px;color:var(--ink2)">Fecha, tolerancia, datos</span><em>11 · Regular · Subheadline</em></div>
+      <div class="ln"><span style="font-size:10px;color:var(--ink2)">Lo más pequeño permitido</span><em>10 · Footnote (mínimo)</em></div>
+    </div></div>
+  </div>
+  <table style="margin-top:26px">
+    <tr><th>Regla de Apple</th><th>Cómo la aplicamos en Enzo</th></tr>
+    <tr><td>Evitar pesos delgados</td><td>Solo Regular, Medium, Semibold y Bold. Nada de Light ni Thin.</td></tr>
+    <tr><td>Respetar el tamaño de texto del iPhone</td><td>En el iPhone usamos el estilo del sistema, así Enzo crece o se reduce si cambias el tamaño de texto en Ajustes. La Mac no tiene esta función.</td></tr>
+    <tr><td>Jerarquía por peso y tamaño</td><td>La importancia del título viene del peso Bold y el tamaño, no de colores ni mayúsculas.</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>Espaciado y tamaños</h2>
+  <p class="lead">Apple fija tamaños mínimos para tocar y reglas de forma; no publica una cuadrícula de espaciado para iPhone o Mac, así que usamos la convención más común en sus apps: múltiplos de 4 y 8.</p>
+  <div class="two-col">
+    <div><h3>Escala de espaciado</h3><div class="spec"><div class="scale">
+      <div><i style="--s:4px"></i>4</div><div><i style="--s:8px"></i>8</div><div><i style="--s:12px"></i>12</div><div><i style="--s:16px"></i>16</div><div><i style="--s:20px"></i>20</div><div><i style="--s:24px"></i>24</div><div><i style="--s:32px"></i>32</div><div><i style="--s:40px"></i>40</div>
+    </div><p class="note">4–8 dentro de un componente · 12–16 entre elementos de un grupo · 24–40 entre secciones. Márgenes laterales: 16 en el iPhone, 40 en la Mac.</p></div></div>
+    <div><h3>Áreas para tocar</h3><div class="spec"><div class="sizes">
+      <figure><div class="hit"><div class="dot22"></div></div><figcaption>Círculo de 22<br>área de 44 × 44</figcaption></figure>
+      <figure><div class="hit"><button class="glass press" style="width:36px;height:36px;border-radius:50%;display:grid;place-items:center"><svg viewBox="0 0 16 16"><path d="M10 3L5 8l5 5"/></svg></button></div><figcaption>Flecha de 36<br>área de 44 × 44</figcaption></figure>
+      <figure><button class="glass press" style="width:56px;height:56px;border-radius:50%;display:grid;place-items:center"><i style="width:19px;height:19px;border-radius:50%;border:2.5px solid var(--ink);display:block"></i></button><figcaption>Captura<br>56</figcaption></figure>
+    </div><p class="note">Apple pide un área mínima de 44 × 44 pt para todo lo que se toca. Lo que se ve puede ser más chico; el área invisible no.</p></div></div>
+  </div>
+  <table style="margin-top:26px">
+    <tr><th>Control</th><th>iPhone</th><th>Mac</th></tr>
+    <tr><td>Botón normal (cápsula)</td><td>44 de alto</td><td>32 de alto</td></tr>
+    <tr><td>Botón chico</td><td>36 de alto, área de 44</td><td>28 de alto</td></tr>
+    <tr><td>Menú de página</td><td>40 de alto</td><td>40 de alto</td></tr>
+    <tr><td>Botón de captura</td><td>56 de diámetro</td><td>Arriba, junto al menú (ver nota)</td></tr>
+    <tr><td>Tarjeta de pendiente</td><td>radio 20 · margen interno 14</td><td>radio 22 · margen interno 18</td></tr>
+  </table>
+  <table style="margin-top:18px">
+    <tr><th>Regla de Apple</th><th>Cómo la aplicamos en Enzo</th></tr>
+    <tr><td>Uno o dos botones destacados por vista</td><td>El botón sólido solo para la acción principal (Listo, Entrar). El resto en vidrio.</td></tr>
+    <tr><td>Cápsulas en fila, rectángulos redondeados en columna</td><td>Barra de Rutina y botones en fila: cápsulas. Bloques de rutina y tarjetas: rectángulos redondeados.</td></tr>
+    <tr><td>Todo botón tiene estado al presionar</td><td>Compresión con resorte en todos los controles.</td></tr>
+    <tr><td>En la Mac, evitar controles abajo de la ventana</td><td><span class="fix">Ajuste:</span> en la Mac el círculo de captura pasaría arriba, junto al menú; el atajo N se mantiene. En el iPhone se queda abajo, al alcance del pulgar.</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>Claro y oscuro</h2>
+  <p class="lead">Apple pide un contraste de texto de al menos 4.5:1, e idealmente 7:1 en textos pequeños con colores propios. Medí los colores actuales de Enzo contra sus fondos.</p>
+  <table>
+    <tr><th>Texto</th><th>Oscuro</th><th>Claro</th></tr>
+    <tr><td>Principal</td><td><span class="ok">15.1:1</span></td><td><span class="ok">16.4:1</span></td></tr>
+    <tr><td>Secundario</td><td><span class="ok">8.4:1</span></td><td><span class="ok">7.4:1</span></td></tr>
+    <tr><td>Terciario (fechas, datos)</td><td><span class="ok">5.6:1</span></td><td><span class="fix">4.5:1</span> justo en el mínimo · subirlo un poco</td></tr>
+    <tr><td>Rojo de "vencida"</td><td><span class="ok">8.6:1</span></td><td><span class="fix">4.1:1</span> · con #C42B20 sube a 5.1:1</td></tr>
+    <tr><td>Blanco sobre azul (Entrar)</td><td colspan="2"><span class="fix">3.0:1</span> · con el azul #1A73D9 sube a 4.7:1</td></tr>
+    <tr><td>Azul sobre fondo</td><td><span class="ok">6.9:1</span></td><td><span class="fix">3.0:1</span> · en claro, el azul solo para iconos y bordes, no para texto</td></tr>
+  </table>
+  <div class="two-col" style="margin-top:26px">
+    <div><h3>Colores con sus variantes</h3><div class="spec">
+      <div class="ln"><span class="swatch"><i style="background:#2798F5"></i>Acento</span><em>#2798F5 · botones con texto blanco #1A73D9 (4.7:1)</em></div>
+      <div class="ln"><span class="swatch"><i style="background:#ff8a80"></i>Vencida</span><em>oscuro #FF8A80 · claro #C42B20</em></div>
+      <div class="ln"><span class="swatch"><i style="background:#34c759"></i>Hecho</span><em>verdes del Resumen, con variante clara</em></div>
+    </div><p class="note">Apple pide que cada color propio tenga versión clara, oscura y de alto contraste.</p></div>
+    <div><h3>Reglas de tema</h3><div class="spec">
+      <div class="ln"><span>Fondos base y elevados</span><em>en oscuro, hojas y menús más claros que el fondo</em></div>
+      <div class="ln"><span>Jerarquía de texto</span><em>principal · secundario · terciario · líneas</em></div>
+      <div class="ln"><span>Aumentar contraste</span><em>bordes más marcados y texto terciario más fuerte</em></div>
+      <div class="ln"><span>Reducir transparencia</span><em>el vidrio se vuelve sólido tintado</em></div>
+    </div><p class="note">Apple pide probar con Aumentar contraste y Reducir transparencia activados, por separado y juntos. Enzo responderá a ambos ajustes del sistema.</p></div>
+  </div>
+  <p class="note" style="margin-top:20px"><span class="fix">Decisión pendiente:</span> Apple recomienda que una app no tenga su propio selector de apariencia y que siga al sistema. Hoy Enzo tiene Auto, Oscuro y Claro en Ajustes. Propongo dejar solo "Automático" o mantener el selector, como prefieras.</p>
+</section>
+
+<section>
+  <h2>Movimiento</h2>
+  <p class="lead">Rápido y físico. Nada se anima por adorno: cada movimiento explica un cambio.</p>
+  <table>
+    <tr><th>Momento</th><th>Qué pasa</th><th>Tiempo y curva</th></tr>
+    <tr><td>Presionar</td><td>El control se comprime al 94 % y regresa con un rebote leve.</td><td><code>120 ms al bajar · 420 ms resorte al soltar</code></td></tr>
+    <tr><td>Cambiar selección</td><td>La cápsula blanca viaja al nuevo botón y se estira a la mitad del camino, como gel.</td><td><code>420 ms resorte</code></td></tr>
+    <tr><td>Abrir una hoja</td><td>La hoja nace del botón que la abre (círculo → hoja) y el fondo se oscurece.</td><td><code>480 ms resorte</code></td></tr>
+    <tr><td>Cambiar texto</td><td>Performance ↔ Línea Crítica: el texto nuevo sube 7 px desde un leve desenfoque.</td><td><code>340 ms ease-out</code></td></tr>
+    <tr><td>Desplazar</td><td>En el iPhone la barra de Rutina se encoge a solo la sección activa al bajar.</td><td><code>420 ms resorte</code></td></tr>
+    <tr><td>Completar</td><td>La tarjeta gira y muestra la barra de 4 segundos para deshacer (se mantiene).</td><td><code>560 ms ease-in-out</code></td></tr>
+  </table>
+  <p class="note">Todo respeta "Reducir movimiento" del sistema: si está activo, los cambios son instantáneos.</p>
+</section>
+
+<section>
+  <h2>Receta técnica</h2>
+  <table>
+    <tr><th>Capa</th><th>Oscuro</th><th>Claro</th></tr>
+    <tr><td>Relleno</td><td><code>blanco 16 % → 5 %</code></td><td><code>blanco 72 % → 42 %</code></td></tr>
+    <tr><td>Desenfoque</td><td colspan="2"><code>blur 14 px · saturación 190 % · brillo 106 %</code></td></tr>
+    <tr><td>Brillo superior</td><td><code>línea blanca 50 %</code></td><td><code>línea blanca 95 %</code></td></tr>
+    <tr><td>Borde oscuro</td><td><code>negro 45 %, 0.5 px</code></td><td><code>azul grisáceo 16 %, 0.5 px</code></td></tr>
+    <tr><td>Tintado</td><td><code>gris 78–86 %</code></td><td><code>blanco 92–94 %</code></td></tr>
+  </table>
+  <p class="note">La refracción real de Apple (el vidrio que dobla lo que tiene debajo) solo se puede imitar en Chrome con filtros SVG. Safari y el iPhone no lo permiten, así que usamos desenfoque, saturación y reflejos, que se ven igual de bien en todos lados.</p>
+</section>
+
+<section>
+  <h2>Referencias</h2>
+  <div class="refs">
+    <a href="https://www.macrumors.com/2026/06/10/how-liquid-glass-is-changing-in-ios-27/">MacRumors · Cómo cambia Liquid Glass en iOS 27</a>
+    <a href="https://www.cultofmac.com/news/liquid-glass-changes-ios-27-macos-27">Cult of Mac · Cambios de Liquid Glass en iOS 27 y macOS 27</a>
+    <a href="https://developer.apple.com/videos/play/wwdc2025/356/">Apple · Get to know the new design system (WWDC25)</a>
+    <a href="https://developer.apple.com/design/human-interface-guidelines/materials">Apple · Human Interface Guidelines: Materials</a>
+    <a href="https://developer.apple.com/design/human-interface-guidelines/typography">Apple · Human Interface Guidelines: Typography</a>
+    <a href="https://developer.apple.com/design/human-interface-guidelines/layout">Apple · Human Interface Guidelines: Layout</a>
+    <a href="https://developer.apple.com/design/human-interface-guidelines/buttons">Apple · Human Interface Guidelines: Buttons</a>
+    <a href="https://developer.apple.com/design/human-interface-guidelines/dark-mode">Apple · Human Interface Guidelines: Dark Mode</a>
+    <a href="https://developer.apple.com/design/human-interface-guidelines/color">Apple · Human Interface Guidelines: Color</a>
+    <a href="https://blog.logrocket.com/how-create-liquid-glass-effects-css-and-svg/">LogRocket · Liquid Glass con CSS y SVG</a>
+  </div>
+</section>
+
+</div>
+<script>
+/* Tema */
+document.querySelectorAll('[data-t]').forEach(b => b.onclick = () => {
+  document.documentElement.dataset.theme = b.dataset.t;
+  document.querySelectorAll('[data-t]').forEach(x => x.setAttribute('aria-pressed', x === b));
+});
+
+/* Reflejo que sigue al cursor sobre el vidrio */
+document.addEventListener('pointermove', e => {
+  const g = e.target.closest && e.target.closest('.glass'); if (!g) return;
+  const r = g.getBoundingClientRect();
+  g.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100) + '%');
+  g.style.setProperty('--my', ((e.clientY - r.top) / r.height * 100) + '%');
+});
+
+/* Rutina de ejemplo */
+const bloques = [
+  ['Desayuno', 'Tolerancia 10 min', '06:30', '07:10', '#ffc99a', '#111', 1, 1],
+  ['Trabajo', 'Trayecto 1 h 30', '08:50', '14:10', '#c9bcff', '#111', 1, 1],
+  ['Inglés', '', '16:00', '16:55', '#4a6cf7', '#fff', 0, 0],
+  ['Pierna y glúteo', 'Ejercicio · ver rutina', '18:40', '19:40', '#bdeca6', '#111', 0, 0],
+  ['Cena', 'Tolerancia 10 min', '19:40', '20:20', '#ffc99a', '#111', 1, 0],
+  ['Leer', '', '20:30', '21:10', '#fdf5b0', '#111', 0, 0],
+  ['Dormir', '', '22:00', '06:00', '#6b6b75', '#fff', 1, 0]
+];
+function pintarRutina(el, critica) {
+  const lista = critica ? bloques.filter(b => b[6]) : bloques;
+  el.innerHTML = lista.map(b => critica
+    ? `<div class="bk" style="background:var(--card);border:1px solid var(--line)"><i class="${b[7] ? 'on' : ''}"></i><span>${b[0]}</span><span></span></div>`
+    : `<div class="bk ${b[6] ? 'core' : ''}" style="${b[6] ? `background:${b[4]};color:${b[5]}` : `border:1.5px solid ${b[4]}`}"><i class="${b[7] ? 'on' : ''}"></i><span>${b[0]}${b[1] ? `<small>${b[1]}</small>` : ''}</span><time>${b[2]}<br>${b[3]}</time></div>`).join('');
+}
+pintarRutina(document.getElementById('r-list'));
+pintarRutina(document.getElementById('r-list-mac'));
+
+/* Botón de vista: cambia texto e información, y su ancho se adapta con resorte */
+function botonVista(btn, lista) {
+  let critica = false;
+  btn.onclick = () => {
+    critica = !critica;
+    const span = btn.querySelector('span'), antes = btn.offsetWidth;
+    span.textContent = critica ? 'Línea Crítica' : 'Performance';
+    span.classList.remove('swap'); void span.offsetWidth; span.classList.add('swap');
+    const despues = btn.offsetWidth; btn.style.width = antes + 'px'; void btn.offsetWidth; btn.style.width = despues + 'px';
+    setTimeout(() => { btn.style.width = ''; }, 420);
+    if (lista) pintarRutina(lista, critica);
+  };
+}
+botonVista(document.getElementById('mode'), document.getElementById('r-list'));
+botonVista(document.getElementById('mode2'));
+
+/* Selección que viaja y se estira como gel */
+function seleccion(bar) {
+  const sel = bar.querySelector('.sel'), btns = [...bar.querySelectorAll('button')];
+  const colocar = (b, animar) => {
+    const x = b.offsetLeft, w = b.offsetWidth;
+    if (!animar) { sel.style.left = x + 'px'; sel.style.width = w + 'px'; return; }
+    const x0 = sel.offsetLeft, w0 = sel.offsetWidth;
+    const a = Math.min(x0, x), z = Math.max(x0 + w0, x + w);
+    sel.animate([{ left: x0 + 'px', width: w0 + 'px' }, { left: a + 'px', width: (z - a) * .82 + 'px', offset: .45 }, { left: x + 'px', width: w + 'px' }],
+      { duration: 420, easing: 'cubic-bezier(.23,1,.32,1)' });
+    sel.style.left = x + 'px'; sel.style.width = w + 'px';
+  };
+  btns.forEach(b => b.onclick = () => { btns.forEach(x => x.setAttribute('aria-current', x === b)); colocar(b, true); });
+  requestAnimationFrame(() => colocar(btns.find(b => b.getAttribute('aria-current') === 'true'), false));
+  bar.__recolocar = () => colocar(btns.find(b => b.getAttribute('aria-current') === 'true'), false);
+}
+const tabbar = document.getElementById('tabbar');
+seleccion(tabbar); seleccion(document.getElementById('seg3'));
+
+/* La barra de Rutina se encoge al bajar y regresa al subir */
+let ultimo = 0;
+document.getElementById('r-scroll').addEventListener('scroll', e => {
+  const y = e.target.scrollTop, actual = tabbar.classList.contains('min');
+  const min = y > ultimo + 2 && y > 30 ? true : y < ultimo - 2 || y <= 30 ? false : actual;
+  if (min !== actual) {
+    tabbar.classList.toggle('min', min);
+    const fin = () => tabbar.__recolocar();
+    setTimeout(fin, 20); setTimeout(fin, 220); setTimeout(fin, 440);
+  }
+  ultimo = y;
+}, { passive: true });
+/* Contenido extra para poder desplazar */
+document.getElementById('r-list').insertAdjacentHTML('afterend', '<div style="height:260px"></div>');
+
+/* Hoja que nace del botón de captura */
+const fab = document.getElementById('fab'), sheet = document.getElementById('sheet'), scrim = document.getElementById('scrim'), pantalla = document.getElementById('s-pend');
+function abrir() {
+  const p = pantalla.getBoundingClientRect(), f = fab.getBoundingClientRect();
+  Object.assign(sheet.style, { left: '8px', right: '8px', bottom: '8px' });
+  sheet.classList.add('open'); scrim.classList.add('on');
+  const s = sheet.getBoundingClientRect();
+  sheet.animate([
+    { transform: `translate(${f.left - s.left}px, ${f.top - s.top}px) scale(${f.width / s.width}, ${f.height / s.height})`, borderRadius: '50%', opacity: .6 },
+    { transform: 'none', borderRadius: '30px', opacity: 1 }
+  ], { duration: 480, easing: 'linear(0,.009,.035 2.1%,.141 4.4%,.723 12.9%,.938 16.7%,1.017 20.5%,1.043 24.8%,1.035 28.4%,1 39.7%,.993 47.3%,1)', transformOrigin: 'top left' });
+  sheet.style.transformOrigin = 'top left';
+  void p;
+}
+function cerrar() {
+  const f = fab.getBoundingClientRect(), s = sheet.getBoundingClientRect();
+  const an = sheet.animate([{ transform: 'none', borderRadius: '30px', opacity: 1 }, { transform: `translate(${f.left - s.left}px, ${f.top - s.top}px) scale(${f.width / s.width}, ${f.height / s.height})`, borderRadius: '50%', opacity: 0 }], { duration: 300, easing: 'cubic-bezier(.23,1,.32,1)' });
+  scrim.classList.remove('on');
+  an.onfinish = () => sheet.classList.remove('open');
+}
+fab.onclick = abrir; scrim.onclick = cerrar; document.getElementById('sheet-ok').onclick = cerrar;
+
+/* Interruptor */
+const sw = document.getElementById('sw');
+sw.onclick = () => sw.setAttribute('aria-checked', sw.getAttribute('aria-checked') !== 'true');
+</script>
+</body>
+</html>

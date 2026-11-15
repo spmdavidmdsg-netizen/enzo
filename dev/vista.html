@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Enzo · revisión</title>
+<style>
+  :root{--bg:#111214;--ink:#e9e9ec;--ink2:#9a9aa3;--line:rgba(255,255,255,.12)}
+  *{box-sizing:border-box;margin:0}
+  body{background:var(--bg);color:var(--ink);font:500 13px/1.4 -apple-system,BlinkMacSystemFont,system-ui,sans-serif;padding:20px 24px 40px}
+  header{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;margin-bottom:22px}
+  h1{font-size:17px;font-weight:700;letter-spacing:-.01em;margin-right:auto}
+  .grp{display:flex;gap:6px;align-items:center}
+  .grp span{color:var(--ink2);margin-right:2px}
+  button{font:inherit;color:var(--ink);background:#1d1e22;border:1px solid var(--line);border-radius:999px;padding:7px 13px;cursor:pointer}
+  button:hover{border-color:rgba(255,255,255,.3)}
+  button[aria-pressed="true"]{background:var(--ink);color:#111;border-color:var(--ink)}
+  .stage{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start;justify-content:center}
+  figure{display:flex;flex-direction:column;align-items:center;gap:10px}
+  figcaption{color:var(--ink2)}
+  .mac{width:min(960px,calc(100vw - 48px));aspect-ratio:1280/800;border-radius:14px;border:1px solid var(--line);overflow:hidden;position:relative;background:#000}
+  .mac iframe{position:absolute;left:0;top:0;width:1280px;height:800px;border:0;transform-origin:0 0}
+  .phone{width:410px;height:864px;border-radius:58px;padding:10px;background:#2a2b30;box-shadow:inset 0 0 0 2px #3a3b40;position:relative}
+  .phone iframe{width:390px;height:844px;border:0;border-radius:48px;background:#000;display:block}
+  .note{max-width:960px;margin:22px auto 0;color:var(--ink2);text-align:center}
+  @media (max-width:470px){.phone{transform:scale(.82);transform-origin:top center;margin-bottom:-150px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Enzo · estado actual</h1>
+  <div class="grp"><span>Tema</span><button data-tema="auto">Auto</button><button data-tema="dark">Oscuro</button><button data-tema="light">Claro</button></div>
+  <div class="grp"><span>Página</span><button data-pag="pendientes">Pendientes</button><button data-pag="rutina">Rutina</button></div>
+  <div class="grp"><span>Datos</span><button id="ejemplo">Cargar ejemplo</button><button id="vaciar">Vaciar</button></div>
+  <button id="bienvenida">Ver bienvenida</button>
+  <button id="recargar">Recargar ambos</button>
+</header>
+<div class="stage">
+  <figure><div class="mac"><iframe id="f-mac" src="../index.html?sinbienvenida" title="Enzo en escritorio"></iframe></div><figcaption>Mac · 1280 × 800</figcaption></figure>
+  <figure><div class="phone"><iframe id="f-phone" src="../index.html?sinbienvenida" title="Enzo en iPhone"></iframe></div><figcaption>iPhone · 390 × 844</figcaption></figure>
+</div>
+<p class="note">Los dos marcos comparten los mismos datos. Si cambias algo en uno, presiona "Recargar ambos" para verlo en el otro. En el iPhone real se agregan los márgenes de la isla y la barra de inicio.</p>
+
+<script>
+  if (location.hostname === '127.0.0.1') location.replace(location.href.replace('127.0.0.1', 'localhost'));
+  const frames = () => [document.getElementById('f-mac'), document.getElementById('f-phone')];
+  const recargar = () => frames().forEach(f => f.contentWindow.location.reload());
+
+  function escalar() {
+    const box = document.querySelector('.mac'), f = document.getElementById('f-mac');
+    f.style.transform = `scale(${box.clientWidth / 1280})`;
+  }
+  addEventListener('resize', escalar); escalar();
+
+  function pintarTema() {
+    const t = localStorage.getItem('enzo-tema') || 'auto';
+    document.querySelectorAll('[data-tema]').forEach(b => b.setAttribute('aria-pressed', b.dataset.tema === t));
+  }
+  document.querySelectorAll('[data-tema]').forEach(b => b.onclick = () => { localStorage.setItem('enzo-tema', b.dataset.tema); pintarTema(); recargar(); });
+  pintarTema();
+
+  function pintarPag() {
+    const p = localStorage.getItem('enzo-pagina') || 'pendientes';
+    document.querySelectorAll('[data-pag]').forEach(b => b.setAttribute('aria-pressed', b.dataset.pag === p));
+  }
+  document.querySelectorAll('[data-pag]').forEach(b => b.onclick = () => { localStorage.setItem('enzo-pagina', b.dataset.pag); pintarPag(); recargar(); });
+  pintarPag();
+
+  /* Escribe directamente en la base local de Enzo (misma que usa la app). */
+  function escribir(todo) {
+    return new Promise((ok, ko) => {
+      const r = indexedDB.open('enzo', 1);
+      r.onupgradeneeded = () => r.result.createObjectStore('kv');
+      r.onerror = () => ko(r.error);
+      r.onsuccess = () => {
+        const tx = r.result.transaction('kv', 'readwrite');
+        todo ? tx.objectStore('kv').put(todo, 'todo') : tx.objectStore('kv').delete('todo');
+        tx.oncomplete = () => { r.result.close(); ok(); };
+        tx.onerror = () => ko(tx.error);
+      };
+    });
+  }
+  const local = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  const dia = n => { const d = new Date(); d.setDate(d.getDate() + n); return local(d); };
+  function ejemplo() {
+    const t = Date.now(), p = (id, titulo, fecha, extra = {}) => ({ id, titulo, notas: '', estado: 'pendiente', importante: false, fecha, creado: dia(-3), actualizado: t, ...extra });
+    const act = (id, d, nombre, inicio, dur, tipo, extra = {}) => ({ id: id + '-' + d, dia: d, nombre, inicio, dur, tipo, tolA: 0, tolD: 0, ida: 0, vuelta: 0, core: false, actualizado: t, ...extra });
+    const actividades = [];
+    ['lun', 'mar', 'mie', 'jue', 'vie'].forEach(d => actividades.push(
+      act('dormir', d, 'Dormir', '22:00', 480, 'sueno', { core: true }),
+      act('desayuno', d, 'Desayuno', '06:30', 30, 'comida', { core: true, tolD: 10 }),
+      act('trabajo', d, 'Trabajo', '09:00', 300, 'trabajo', { core: true, tolA: 10, tolD: 10, ida: 90, vuelta: 90 }),
+      act('ingles', d, 'Inglés', '16:00', 45, 'avance', { tolD: 10 }),
+      act('ejercicio', d, 'Pierna y glúteo', '18:40', 45, 'ejercicio', { tolD: 15 }),
+      act('cena', d, 'Cena', '19:40', 30, 'comida', { core: true, tolD: 10 }),
+      act('leer', d, 'Leer', '20:30', 40, 'recreativo')
+    ));
+    ['sab', 'dom'].forEach(d => actividades.push(
+      act('dormir', d, 'Dormir', '22:00', 480, 'sueno', { core: true }),
+      act('desayuno', d, 'Desayuno', '06:30', 30, 'comida', { core: true, tolD: 10 }),
+      act('ejercicio', d, 'Correr', '08:00', 60, 'ejercicio', { tolD: 15 }),
+      act('lavar', d, 'Lavar ropa', '10:00', 60, 'tarea', { core: true }),
+      act('comida', d, 'Comida', '13:30', 60, 'comida', { core: true, tolD: 10 }),
+      act('dibujar', d, 'Dibujar', '17:00', 90, 'recreativo'),
+      act('cena', d, 'Cena', '19:40', 30, 'comida', { core: true, tolD: 10 })
+    ));
+    const clave = ['dom', 'lun', 'mar', 'mie', 'jue', 'vie', 'sab'][new Date().getDay()], fecha = dia(0);
+    /* Registros de los últimos 100 días (pseudoaleatorios pero estables), para el Resumen. */
+    const DS = ['dom', 'lun', 'mar', 'mie', 'jue', 'vie', 'sab'], registros = [];
+    let semilla = 7; const azar = () => (semilla = (semilla * 9301 + 49297) % 233280) / 233280;
+    for (let k = 100; k >= 0; k--) {
+      const d = new Date(); d.setDate(d.getDate() - k); const f = local(d);
+      if (azar() < .12) continue;                         /* algunos días sin registro */
+      const animo = .45 + azar() * .55;
+      actividades.filter(a => a.dia === DS[d.getDay()]).forEach((a, i) => {
+        if (k === 0 && i > 2) return;
+        if (azar() < (a.core ? animo + .25 : animo - .1)) registros.push({ id: f + '|' + a.id, fecha: f, actividadId: a.id, nombre: a.nombre, tipo: a.tipo, core: a.core, hecho: true, actualizado: t });
+      });
+    }
+    void clave; void fecha;
+    return {
+      state: {
+        actividades, registros, followups: [], ejercicios: [], sesiones: [], config: [],
+        pendientes: [
+          p('e1', 'Pagar tarjeta', dia(-1), { importante: true }),
+          p('e2', 'Examen de inglés', dia(0)),
+          p('e3', 'Regar las plantas', dia(0), { rep: { n: 3, unit: 'd' } }),
+          p('e4', 'Llamar a mamá', ''),
+          p('e5', 'Comprar regalo de cumpleaños', dia(0)),
+          p('e6', 'Renovar licencia', dia(5)),
+          p('e8', 'Cita con el dentista', dia(9)),
+          p('e9', 'Pagar renta', dia(15), { rep: { n: 1, unit: 'm' } }),
+          p('e7', 'Reembolso de la aseguradora', dia(3))
+        ]
+      },
+      cola: [], ultimo: null
+    };
+  }
+  document.getElementById('ejemplo').onclick = async () => { localStorage.removeItem('enzo-conexion'); localStorage.removeItem('enzo-token'); await escribir(ejemplo()); recargar(); };
+
+  /* Si la base está vacía (primera vez en este navegador o dirección), carga el ejemplo solo. */
+  function leer() {
+    return new Promise(ok => {
+      const r = indexedDB.open('enzo', 1);
+      r.onupgradeneeded = () => r.result.createObjectStore('kv');
+      r.onerror = () => ok(null);
+      r.onsuccess = () => {
+        const g = r.result.transaction('kv').objectStore('kv').get('todo');
+        g.onsuccess = () => { r.result.close(); ok(g.result || null); };
+        g.onerror = () => { r.result.close(); ok(null); };
+      };
+    });
+  }
+  leer().then(async t => {
+    const vacio = !t || !(t.state || t).actividades?.length && !(t.state || t).pendientes?.length;
+    if (vacio && !localStorage.getItem('enzo-token')) { await escribir(ejemplo()); recargar(); }
+  });
+  document.getElementById('vaciar').onclick = async () => { await escribir(null); recargar(); };
+  document.getElementById('recargar').onclick = recargar;
+  document.getElementById('bienvenida').onclick = () => frames().forEach(f => { f.src = '../index.html?v=' + Date.now(); });
+</script>
+</body>
+</html>

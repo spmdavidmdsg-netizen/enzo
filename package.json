@@ -1,0 +1,14 @@
+{
+  "name": "enzo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Enzo: organización diaria personal (PWA + Apps Script).",
+  "scripts": {
+    "backend:subir": "clasp push",
+    "backend:abrir": "clasp open-script",
+    "simulador": "node dev/simulador-gas.js 4301"
+  },
+  "devDependencies": {
+    "@google/clasp": "^3.4.1"
+  }
+}

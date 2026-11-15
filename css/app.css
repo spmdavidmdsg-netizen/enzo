@@ -1,0 +1,594 @@
+/* ============================================================
+   Enzo · sistema visual (guía: diseno/guia-visual-enzo.html)
+   Liquid Glass solo en controles; el contenido se queda sólido.
+   Letra del sistema con la escala de Apple: en el iPhone sigue el
+   tamaño de texto del sistema; la Mac crece en el media query.
+   ============================================================ */
+:root{
+  --ease-out:cubic-bezier(.23,1,.32,1);
+  --ease-in-out:cubic-bezier(.77,0,.175,1);
+  --ease-drawer:cubic-bezier(.32,.72,0,1);
+  /* Resorte con un pequeño rebote, como los controles de iOS 27 */
+  --spring:linear(0,.009,.035 2.1%,.141 4.4%,.723 12.9%,.938 16.7%,1.017 20.5%,1.043 24.8%,1.035 28.4%,1 39.7%,.993 47.3%,1);
+  --accent:#2798F5;            /* iconos, bordes, foco */
+  --accent-strong:#1A73D9;     /* fondos con texto blanco (4.7:1) */
+  --accent-text:#2798F5;       /* texto azul: solo en oscuro */
+  --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
+
+  --bg:linear-gradient(160deg,#1c1e27 0%,#0a0b0f 45%,#000 88%);
+  --solid:#050507; --elev:#1b1c22;
+  --ink:#f4f4f5; --ink2:rgba(244,244,245,.72); --ink3:rgba(244,244,245,.56);
+  --card:rgba(255,255,255,.055);
+  --field:rgba(255,255,255,.07); --field-hi:rgba(255,255,255,.11);
+  --line:rgba(255,255,255,.09); --line2:rgba(255,255,255,.22);
+  --hi:inset 0 1px 0 rgba(255,255,255,.07);
+  --shadow:0 30px 80px -20px rgba(0,0,0,.7),0 8px 24px -12px rgba(0,0,0,.5);
+  --card-shadow:0 0 0 0 transparent;
+  --fill:#f4f4f5; --on-fill:#0b0b0c;
+  --scrim:rgba(0,0,0,.45);
+  --danger:#ff8a80;
+  --on:#34c759;
+  /* Vidrio */
+  --g-fill:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.05));
+  --g-tint:linear-gradient(180deg,rgba(40,42,50,.8),rgba(22,23,28,.88));
+  --g-spec:rgba(255,255,255,.5);
+  --g-rim:rgba(255,255,255,.14);
+  --g-edge:rgba(0,0,0,.45);
+  --g-shadow:0 10px 30px -8px rgba(0,0,0,.55),0 2px 6px rgba(0,0,0,.25);
+
+  /* iPhone: estilos de Apple un escalón abajo, en rem para seguir el tamaño de texto del sistema (base 17) */
+  --t-title:1.294rem;  /* 22 · Title 2 */
+  --t-sheet:1.176rem;  /* 20 · Title 3 */
+  --t-name:.882rem;    /* 15 · Subhead semibold */
+  --t-body:.882rem;    /* 15 · Subhead */
+  --t-sec:.765rem;     /* 13 · Footnote */
+  --t-small:.706rem;   /* 12 · Caption 1 */
+  --t-min:.647rem;     /* 11 · Caption 2, mínimo */
+  --h-btn:44px; --h-btn-sm:36px; --h-cap:40px; --h-inp:44px;
+  --r-card:20px; --p-card:14px;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --accent-text:var(--ink);
+  --bg:linear-gradient(160deg,#ffffff 0%,#f2f4f7 55%,#e8ecf1 100%);
+  --solid:#eef1f5; --elev:#ffffff;
+  --ink:#0b0d10; --ink2:rgba(11,13,16,.72); --ink3:rgba(11,13,16,.62);
+  --card:#ffffff;
+  --field:rgba(15,30,50,.055); --field-hi:rgba(15,30,50,.09);
+  --line:rgba(15,30,50,.09); --line2:rgba(15,30,50,.26);
+  --hi:inset 0 1px 0 #fff;
+  --card-shadow:0 14px 30px -20px rgba(28,60,104,.32),0 2px 6px -3px rgba(28,60,104,.1);
+  --shadow:0 40px 90px -28px rgba(28,60,104,.38),0 10px 26px -12px rgba(28,60,104,.16);
+  --fill:#0b0d10; --on-fill:#f6f8fb;
+  --scrim:rgba(190,202,216,.4);
+  --danger:#C42B20;
+  --g-fill:linear-gradient(180deg,rgba(255,255,255,.72),rgba(255,255,255,.42));
+  --g-tint:linear-gradient(180deg,rgba(255,255,255,.92),rgba(246,248,251,.95));
+  --g-spec:rgba(255,255,255,.95);
+  --g-rim:rgba(255,255,255,.7);
+  --g-edge:rgba(20,40,70,.16);
+  --g-shadow:0 12px 30px -10px rgba(28,60,104,.32),0 2px 6px rgba(28,60,104,.1);
+  color-scheme:light;
+}
+
+*{box-sizing:border-box;margin:0}
+html{height:100%;font-size:17px;-webkit-text-size-adjust:100%}
+/* En el iPhone, la base es el tamaño de texto que elegiste en Ajustes del sistema */
+@supports (font:-apple-system-body){@media (max-width:819px){html{font:-apple-system-body}}}
+html,body{overscroll-behavior:none}
+body{
+  min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",system-ui,sans-serif;
+  font-size:var(--t-body);line-height:1.45;color:var(--ink);background:var(--solid);
+  -webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;-webkit-tap-highlight-color:transparent;
+}
+body::before{content:"";position:fixed;inset:0;background:var(--bg);z-index:-1}
+::selection{background:var(--accent-strong);color:#fff}
+button,input,select,textarea{font:inherit;color:inherit}
+button{background:none;border:0;padding:0;cursor:pointer;text-align:inherit;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:8px}
+svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- vidrio (solo controles) ---------- */
+:where(.glass){position:relative}
+.glass{
+  isolation:isolate;
+  background:var(--g-fill);
+  -webkit-backdrop-filter:blur(14px) saturate(1.9) brightness(1.06);
+  backdrop-filter:blur(14px) saturate(1.9) brightness(1.06);
+  box-shadow:
+    inset 0 1px 0 var(--g-spec),            /* brillo del borde superior */
+    inset 0 -1px 0 rgba(255,255,255,.06),
+    inset 0 0 0 1px var(--g-rim),           /* aro de luz */
+    0 0 0 .5px var(--g-edge),               /* borde oscurecido (iOS 27) */
+    var(--g-shadow);
+}
+/* Reflejo que sigue al cursor o al dedo */
+.glass::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:-1;
+  background:radial-gradient(120px 80px at var(--mx,30%) var(--my,0%),rgba(255,255,255,.2),transparent 70%)}
+:root[data-theme="light"] .glass::before{background:radial-gradient(120px 80px at var(--mx,30%) var(--my,0%),rgba(255,255,255,.7),transparent 70%)}
+/* Tintado: superficies con mucho texto, o todo el vidrio si eliges "Tintado" en Ajustes */
+.glass.tint,[data-vidrio="tintado"] .glass{background:var(--g-tint)}
+.glass.tint{-webkit-backdrop-filter:blur(30px) saturate(1.6);backdrop-filter:blur(30px) saturate(1.6)}
+
+/* ---------- presión con resorte (todo lo que se toca) ---------- */
+:is(.me,.cap,.fab,.btn,.icon,.w-btn,.rbar button){transition:transform 420ms var(--spring),background-color 200ms ease,color 200ms ease,filter 200ms ease,box-shadow 200ms ease}
+:is(.me,.cap,.fab,.btn,.icon,.w-btn,.rbar button):active:not(:disabled){transform:scale(.94);transition-duration:120ms;transition-timing-function:var(--ease-out)}
+
+/* ---------- barra superior ---------- */
+.top{position:fixed;inset:0 0 auto 0;z-index:20;display:flex;justify-content:space-between;align-items:center;padding:calc(var(--safe-t) + 12px) 16px 12px;pointer-events:none}
+.top>*{pointer-events:auto}
+.top-r{display:flex;align-items:center;gap:10px}
+.me{position:relative;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-size:var(--t-sec);font-weight:600}
+.me::after{content:"";position:absolute;inset:-4px}
+#sync{position:absolute;right:-1px;bottom:-1px;width:9px;height:9px;border-radius:50%;border:2px solid var(--solid);background:transparent;transition:background 200ms ease}
+#sync[data-s="pendiente"],#sync[data-s="sincronizando"]{background:var(--accent)}
+#sync[data-s="error"]{background:var(--danger)}
+.cap-wrap{position:relative}
+.cap{display:flex;align-items:center;gap:8px;height:var(--h-cap);padding:0 17px;border-radius:999px;font-size:var(--t-sec);font-weight:600;letter-spacing:-.01em}
+.cap-list{position:absolute;right:0;top:100%;padding-top:8px;opacity:0;visibility:hidden;pointer-events:none;transform:scale(.96);transform-origin:top right;transition:opacity 180ms var(--ease-out),transform 320ms var(--spring),visibility 0s linear 180ms}
+.cap-wrap.open .cap-list{opacity:1;visibility:visible;transform:none;pointer-events:auto;transition-delay:0s}
+@media (hover:hover){.cap-wrap:focus-within .cap-list{opacity:1;visibility:visible;transform:none;pointer-events:auto;transition-delay:0s}}
+.cap{-webkit-touch-callout:none}
+.pop{min-width:190px;padding:6px;border-radius:20px}
+.pop-item{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;padding:10px 12px;border-radius:14px;color:var(--ink2);font-size:var(--t-body);transition:background 150ms ease,color 150ms ease}
+.pop-item::before{content:"";width:5px;height:5px;border-radius:50%;background:transparent}
+.pop-item[aria-current="true"]{color:var(--ink);font-weight:600}
+.pop-item[aria-current="true"]::before{background:var(--accent)}
+
+/* ---------- estructura ---------- */
+main{max-width:1100px;margin:0 auto;padding:calc(var(--safe-t) + 72px) 16px calc(var(--safe-b) + 112px)}
+h1{font-size:var(--t-title);font-weight:700;letter-spacing:-.02em;line-height:1.15;text-wrap:balance}
+.h{font-size:var(--t-sec);font-weight:600;color:var(--ink3);letter-spacing:-.005em}
+.sec{margin-top:24px}
+.sec>.h{display:block;margin-bottom:8px}
+.empty{margin-top:20px;padding:20px;border:1px dashed var(--line2);border-radius:var(--r-card);color:var(--ink2);line-height:1.5}
+.enter .st{animation:rise 360ms var(--ease-out) both;animation-delay:calc(var(--i,0)*40ms)}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}}
+
+/* ---------- bienvenida ---------- */
+#welcome{position:fixed;inset:0;z-index:60;display:grid;place-content:center;justify-items:center;gap:12px;padding:40px 28px;text-align:center;background:var(--bg),var(--solid);transition:opacity 620ms var(--ease-out),transform 620ms var(--ease-out),filter 620ms var(--ease-out),visibility 0s linear 620ms}
+#welcome.gone{opacity:0;transform:scale(1.04);filter:blur(10px);visibility:hidden;pointer-events:none}
+#welcome h1{font-size:1.65rem;font-weight:700;letter-spacing:-.02em}
+#welcome p{color:var(--ink2);font-size:var(--t-name)}
+#welcome>*{animation:rise 900ms var(--ease-out) backwards}
+#welcome p{animation-delay:140ms}
+.w-btn{margin-top:24px;height:50px;padding:0 40px;border-radius:999px;font-size:1rem;font-weight:600;color:#fff;background:var(--accent-strong);box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 14px 34px -10px color-mix(in srgb,var(--accent-strong) 55%,transparent),0 3px 8px rgba(0,0,0,.25);animation-delay:280ms!important}
+.w-btn.loading{animation:w-pulse 1.4s ease-in-out infinite!important;animation-delay:0s!important}
+@keyframes w-pulse{0%,100%{opacity:.55}50%{opacity:.9}}
+
+/* ---------- pendientes: tarjetas que giran (contenido sólido) ---------- */
+.home{display:grid;gap:32px}
+.qgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:8px}
+.qt{height:128px;perspective:1400px;cursor:pointer;transition:scale 160ms var(--ease-out);-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+/* Mantener presionado: la tarjeta se hunde poco a poco y abre el detalle */
+.qt.presionando{scale:.95;transition:scale 480ms var(--ease-out)}
+.qt:active:not(.done):not(:has(.check:active)){scale:.98}
+.qt-inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform 560ms var(--ease-in-out)}
+.qt.done .qt-inner{transform:rotateY(180deg)}
+.qt-face{position:absolute;inset:0;border-radius:var(--r-card);padding:var(--p-card);display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);box-shadow:var(--hi),var(--card-shadow);-webkit-backface-visibility:hidden;backface-visibility:hidden;overflow:hidden;text-align:left;transition:border-color 220ms ease}
+.qt-face>.check{position:absolute;top:var(--p-card);right:var(--p-card);z-index:1}
+.qt-hit{flex:1;display:block;width:100%;padding-right:30px;border-radius:6px}
+.qt-title{font-size:var(--t-name);font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.qt-meta{display:flex;align-items:center;gap:6px;font-size:var(--t-small);color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qt-meta.late{color:var(--danger)}
+.imp{width:6px;height:6px;border-radius:50%;background:var(--ink);flex:none}
+.qt-back{transform:rotateY(180deg);justify-content:space-between;background:var(--fill);color:var(--on-fill);border-color:transparent;visibility:hidden;transition:visibility 0s linear 560ms}
+.qt.done .qt-back{visibility:visible;transition-delay:0s}
+.qt-back b{font-size:var(--t-name);font-weight:700}
+.qt-back small{display:block;font-size:var(--t-small);opacity:.75}
+.qt-back .bar{display:block;height:3px;border-radius:2px;background:color-mix(in srgb,var(--on-fill) 18%,transparent);overflow:hidden;margin-top:8px}
+.qt-back .bar i{display:block;height:100%;background:var(--on-fill);transform-origin:left}
+.qt.done .qt-back .bar i{animation:drain var(--resto,4000ms) linear forwards}
+@keyframes drain{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+.check{position:relative;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--ink3);flex:none;transition:border-color 180ms ease,background 220ms var(--ease-out),transform 420ms var(--spring)}
+.check::after{content:"";position:absolute;inset:-11px}
+.check:active{transform:scale(.86);transition-duration:120ms;transition-timing-function:var(--ease-out)}
+.check[aria-pressed="true"]{background:currentColor;border-color:currentColor}
+.check:disabled{opacity:.35;cursor:default}
+
+/* ---------- lista lateral: Próximas y Esperando ---------- */
+.side section+section{margin-top:24px}
+.side .h{display:block;margin-bottom:4px}
+.srow{display:flex;justify-content:space-between;gap:16px;width:100%;min-height:44px;align-items:center;padding:10px 0;border-top:1px solid var(--line);transition:color 150ms ease}
+.srow span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.srow span:last-child{color:var(--ink3);white-space:nowrap;font-size:var(--t-small)}
+.side-empty{color:var(--ink3);padding:8px 0;font-size:var(--t-sec)}
+
+/* ---------- botón de captura: círculo de vidrio (abajo en el iPhone, arriba en la Mac) ---------- */
+.fab{position:fixed;right:16px;bottom:calc(var(--safe-b) + 16px);z-index:15;width:56px;height:56px;border-radius:50%;display:grid;place-items:center}
+.fab i{width:19px;height:19px;border-radius:50%;border:2.5px solid var(--ink)}
+/* Lupa: abajo a la izquierda en Pendientes (solo celular; en la Mac se busca con B) */
+.lupa{position:fixed;left:16px;bottom:calc(var(--safe-b) + 16px);z-index:15;width:56px;height:56px;border-radius:50%;display:grid;place-items:center;transition:transform 420ms var(--spring)}
+.lupa:active{transform:scale(.94);transition-duration:120ms;transition-timing-function:var(--ease-out)}
+.lupa svg{width:22px;height:22px;stroke-width:2}
+body:not([data-page="pendientes"]) :is(.fab,.lupa){display:none}
+@media (min-width:820px){.lupa{display:none}}
+
+/* ---------- barra de Rutina en píldora de vidrio (celular abajo, Mac arriba) ---------- */
+.rbar{position:fixed;left:50%;bottom:calc(var(--safe-b) + 14px);z-index:15;transform:translateX(-50%);display:flex;padding:5px;border-radius:999px}
+.rbar button{position:relative;z-index:1;max-width:160px;overflow:hidden;padding:11px 18px;border-radius:999px;font-size:var(--t-body);font-weight:600;color:var(--ink2);white-space:nowrap;transition:transform 420ms var(--spring),background-color 200ms ease,color 260ms ease,max-width 420ms var(--spring),padding 420ms var(--spring),opacity 260ms ease}
+.rbar button[aria-current="true"]{background:var(--fill);color:var(--on-fill)}
+.rbar.moviendo button[aria-current="true"]{background:transparent}
+.rsel{position:absolute;top:5px;bottom:5px;border-radius:999px;background:var(--fill);z-index:0;pointer-events:none}
+/* Al bajar, la barra se encoge a la sección activa; al subir, regresa */
+.rbar.min button:not([aria-current="true"]){max-width:0;padding-inline:0;opacity:0}
+
+/* ---------- rutina del día ---------- */
+.r-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.r-tools{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin:16px 0}
+.daynav{flex:none;display:flex;gap:4px}
+.icon{position:relative;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:var(--ink2)}
+.icon::after{content:"";position:absolute;inset:-4px}
+.blocks{list-style:none;padding:0;display:flex;flex-direction:column;gap:8px}
+.blocks>li{display:block}
+.bk{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;width:100%;padding:12px 16px;border-radius:16px;font-size:var(--t-name);font-weight:600;line-height:1.25;text-align:left}
+.bk-n small{display:block;font-size:var(--t-small);font-weight:500;opacity:.78;margin-top:2px}
+.bk time{font-size:var(--t-small);font-weight:600;text-align:right;opacity:.85;line-height:1.3}
+/* Sin bordes: las imprescindibles van rellenas de su color con un filo suave del acento;
+   las demás, fondo neutro con un punto del color de su tipo */
+.bk.core{background:var(--c);color:var(--t);border:1px solid color-mix(in srgb,var(--accent) 50%,transparent)}
+.bk.opt{background:var(--card);color:var(--ink);border:1px solid transparent}
+.bk .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--c);margin-right:8px;vertical-align:.08em;box-shadow:inset 0 0 0 1px rgba(127,127,127,.35)}
+.bk.tray{padding:6px 16px;font-weight:500;font-size:var(--t-sec);color:var(--ink3);background:var(--field)}
+.bk.crit{background:var(--card);border:1px solid var(--line);color:var(--ink);padding:14px 16px}
+/* Cada actividad es un botón: sin hacer se ve en relieve (pulsable); hecha se queda pulsada */
+.bk.act{--sombra:0 1px 1px rgba(0,0,0,.3),0 8px 18px -10px rgba(0,0,0,.75);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4),inset 0 -2px 0 rgba(0,0,0,.16),var(--sombra);
+  transition:transform 420ms var(--spring),box-shadow 220ms ease,filter 220ms ease}
+:root[data-theme="light"] .bk.act{--sombra:0 1px 1px rgba(28,60,104,.18),0 8px 18px -10px rgba(28,60,104,.45)}
+.bk.act:active:not(:disabled),.bk.act[aria-pressed="true"]{transform:translateY(2px) scale(.985);filter:brightness(.82) saturate(.85);
+  box-shadow:inset 0 3px 8px rgba(0,0,0,.42),inset 0 0 0 1px rgba(0,0,0,.1)}
+:root[data-theme="light"] .bk.act:active:not(:disabled),:root[data-theme="light"] .bk.act[aria-pressed="true"]{filter:brightness(.9) saturate(.9);box-shadow:inset 0 3px 8px rgba(28,60,104,.3),inset 0 0 0 1px rgba(28,60,104,.08)}
+.bk.act:active:not(:disabled){transition-duration:120ms}
+.bk.act:disabled{cursor:default}
+
+/* ---------- controles ---------- */
+.seg{position:relative;display:inline-grid;grid-auto-flow:column;grid-auto-columns:1fr;padding:3px;border-radius:999px;background:var(--field);border:1px solid var(--line)}
+.seg::before{content:"";position:absolute;top:3px;bottom:3px;left:3px;width:calc((100% - 6px)/var(--n));border-radius:999px;background:var(--fill);transform:translateX(calc(var(--i)*100%));transition:transform 420ms var(--spring)}
+.seg button{position:relative;min-height:36px;padding:7px 14px;font-size:var(--t-sec);font-weight:500;text-align:center;white-space:nowrap;color:var(--ink2);border-radius:999px;transition:color 220ms ease}
+.seg button[aria-pressed="true"]{color:var(--on-fill);font-weight:600}
+.field+.field{margin-top:16px}
+.field>label,.lbl{display:block;font-size:var(--t-small);font-weight:600;color:var(--ink3);margin-bottom:6px}
+.inp{width:100%;height:var(--h-inp);padding:0 14px;border-radius:14px;background:var(--field);border:1px solid transparent;outline:0;font-size:16px;transition:border-color 180ms ease,background 180ms ease;-webkit-appearance:none;appearance:none}
+.inp:focus{border-color:var(--line2);background:var(--field-hi)}
+.inp::placeholder{color:var(--ink3)}
+.btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:var(--h-btn);padding:0 18px;border-radius:999px;font-weight:600;font-size:var(--t-body);border:1px solid var(--line2);white-space:nowrap}
+.btn.glass{border:0}
+.btn.sm{height:var(--h-btn-sm);padding:0 15px;font-size:var(--t-sec)}
+.btn.sm::after{content:"";position:absolute;inset:-4px 0}
+.btn.p{background:var(--fill);color:var(--on-fill);border-color:transparent}
+.btn.q{border-color:transparent;color:var(--ink2)}
+.link{font-size:var(--t-sec);font-weight:500;color:var(--ink2);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line2)}
+.note{font-size:var(--t-small);color:var(--ink3);line-height:1.45}
+
+/* ---------- ajustes ---------- */
+#menu{position:fixed;left:16px;top:calc(var(--safe-t) + 60px);z-index:22;width:min(340px,calc(100vw - 32px));max-height:calc(100dvh - var(--safe-t) - 80px);overflow-y:auto;padding:20px;border-radius:24px;opacity:0;visibility:hidden;pointer-events:none;transform:scale(.94);transform-origin:top left;transition:opacity 180ms var(--ease-out),transform 420ms var(--spring),visibility 0s linear 180ms}
+#menu.open{opacity:1;visibility:visible;transform:none;pointer-events:auto;transition-delay:0s}
+#menu h2{font-size:var(--t-name);font-weight:700;margin-bottom:16px}
+#menu .group{padding-top:16px;margin-top:16px;border-top:1px solid var(--line)}
+#menu .seg{display:grid}
+#menu .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.state{display:flex;align-items:center;gap:8px;font-size:var(--t-sec);color:var(--ink2)}
+.state i{width:8px;height:8px;border-radius:50%;background:var(--ink3)}
+.state[data-s="ok"] i{background:#5fd38d}
+.state[data-s="pendiente"] i,.state[data-s="sincronizando"] i{background:var(--accent)}
+.state[data-s="error"] i{background:var(--danger)}
+
+/* ---------- hoja (editor) ---------- */
+#scrim{position:fixed;inset:0;z-index:30;background:var(--scrim);opacity:0;pointer-events:none;transition:opacity 260ms var(--ease-out)}
+#sheet{position:fixed;z-index:31;left:8px;right:8px;bottom:calc(var(--safe-b) + 8px);max-height:86dvh;border-radius:32px;transform:translateY(calc(100% + 20px));visibility:hidden;transition:transform 380ms var(--ease-drawer),visibility 0s linear 380ms;display:flex;flex-direction:column;overflow:hidden}
+#sheet:focus{outline:0}
+#sheet.morph{transition:none!important;transform-origin:top left}
+.sheet-open #scrim{opacity:1;pointer-events:auto}
+.sheet-open #sheet{transform:none;visibility:visible;transition:transform 420ms var(--ease-drawer),visibility 0s}
+.sh-grab{width:38px;height:5px;border-radius:3px;background:var(--line2);margin:8px auto 0;flex:none}
+.sh-scroll{overflow-y:auto;padding:12px 20px 24px}
+.sh-title{width:100%;background:none;border:0;outline:0;font-size:var(--t-sheet);font-weight:700;letter-spacing:-.01em;padding:4px 0 12px}
+.sh-title::placeholder{color:var(--ink3)}
+.sh-foot{display:flex;justify-content:space-between;gap:12px;margin-top:20px}
+
+/* ---------- aviso ---------- */
+#toast{position:fixed;left:50%;bottom:calc(var(--safe-b) + 88px);z-index:40;display:flex;align-items:center;gap:16px;min-width:0;min-height:46px;padding:0 20px;border-radius:999px;white-space:nowrap;font-size:var(--t-body);opacity:0;visibility:hidden;transform:translate(-50%,12px) scale(.96);transition:opacity 260ms ease,transform 420ms var(--spring),visibility 0s linear 260ms}
+#toast.show{opacity:1;visibility:visible;transform:translate(-50%,0);transition-delay:0s}
+#toast button{position:relative;font-weight:600;color:var(--accent-text)}
+#toast button::after{content:"";position:absolute;inset:-12px -10px}
+
+/* ---------- transiciones entre páginas ---------- */
+::view-transition-old(root){animation:vt-out 160ms ease both}
+::view-transition-new(root){animation:vt-in 240ms var(--ease-out) both}
+@keyframes vt-out{to{opacity:0}}
+@keyframes vt-in{from{opacity:0;transform:translateY(6px)}}
+
+/* ---------- detalle ---------- */
+.area{height:auto;min-height:76px;padding:12px 14px;resize:vertical;line-height:1.45;margin-bottom:16px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:end;margin-bottom:16px}
+.two .field+.field{margin-top:0}
+/* Interruptor como iOS 27: la perilla se estira al presionar y rebota al soltar */
+.sw{position:relative;display:block;width:52px;height:31px;border-radius:999px;background:var(--field-hi);box-shadow:inset 0 0 0 1px var(--line);transition:background 260ms ease;margin-bottom:6px}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:38px;height:25px;border-radius:999px;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.25);transition:transform 420ms var(--spring),width 260ms var(--ease-out)}
+.sw:active::after{width:44px}
+.sw[aria-checked="true"]{background:var(--on)}
+.sw[aria-checked="true"]::after{transform:translateX(8px)}
+.sw[aria-checked="true"]:active::after{transform:translateX(2px)}
+.rep-row{display:grid;grid-template-columns:80px 1fr;gap:8px}
+.rep-row .inp:disabled{opacity:.4}
+select.inp{background-image:none;cursor:pointer}
+#sheet .seg{display:grid}
+.btn.danger{color:var(--danger)}
+kbd{font:inherit;font-size:var(--t-min);padding:1px 6px;border:1px solid var(--line2);border-radius:6px;color:var(--ink2)}
+.keys-note{margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+
+/* ---------- buscador tipo Spotlight ---------- */
+#sheet.spot{top:calc(var(--safe-t) + 64px);left:12px;right:12px;bottom:auto;max-height:none;border-radius:0;overflow:visible;opacity:0;transform:translateY(-14px) scale(.98);transition:opacity 180ms var(--ease-out),transform 180ms var(--ease-out),visibility 0s linear 180ms}
+.sheet-open #sheet.spot{opacity:1;transform:none;transition:opacity 240ms var(--ease-out),transform 420ms var(--spring),visibility 0s}
+.spot-bar{height:54px;border-radius:999px;display:flex;align-items:center;gap:12px;padding:0 20px}
+.spot-bar>svg{width:19px;height:19px;color:var(--ink2)}
+.sr-input{flex:1;min-width:0;height:100%;background:none;border:0;outline:0;font-size:17px}
+.sr-input::placeholder{color:var(--ink3)}
+.spot-panel{margin-top:10px;border-radius:24px;padding:6px;max-height:min(60dvh,460px);overflow-y:auto;overscroll-behavior:contain;animation:spot-in 320ms var(--spring)}
+.spot-panel[hidden]{display:none}
+@keyframes spot-in{from{opacity:0;transform:translateY(-8px) scale(.985)}}
+.sr-res{display:grid}
+.sr-item{display:block;width:100%;min-height:44px;padding:10px 14px;border-radius:18px;transition:background 120ms ease}
+.sr-item b{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sr-item small{display:block;color:var(--ink3);font-size:var(--t-small)}
+.sr-item.dim b{color:var(--ink3);text-decoration:line-through}
+.sr-item.kb{background:var(--field-hi)}
+.sr-empty{padding:14px;color:var(--ink3);font-size:var(--t-body)}
+
+/* ---------- botón de vista (Performance / Línea Crítica) ---------- */
+.modo{overflow:hidden}
+.btn.glass.modo.perf{background:var(--accent-strong);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 0 0 .5px rgba(0,0,0,.2)}
+.modo.perf::before{display:none}
+.modo span{display:inline-block;white-space:nowrap}
+.modo span.swap{animation:swap 340ms var(--ease-out)}
+@keyframes swap{from{opacity:0;transform:translateY(7px);filter:blur(4px)}}
+
+/* ---------- Mac y pantallas grandes ---------- */
+@media (min-width:820px){
+  /* Escala de la Mac: base 13, mínimo 10 */
+  :root{--t-title:26px;--t-sheet:20px;--t-name:15px;--t-body:13px;--t-sec:13px;--t-small:11px;--t-min:10px;
+    --h-btn:32px;--h-btn-sm:28px;--h-inp:34px;--r-card:22px;--p-card:18px}
+  .h{font-weight:700}
+  .top{padding:28px 40px}
+  .me{width:40px;height:40px}
+  .me::after{display:none}
+  main{padding:120px 40px 80px}
+  .sec{margin-top:32px}
+  .qgrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+  .qt{height:136px}
+  .home{grid-template-columns:minmax(0,1fr) 300px;gap:64px;align-items:start}
+  .side{margin-top:32px}
+  .srow{min-height:36px}
+  /* En la Mac nada de controles abajo: la captura sube junto al menú */
+  .fab{position:relative;right:auto;bottom:auto;width:var(--h-cap);height:var(--h-cap)}
+  .fab i{width:14px;height:14px;border-width:2px}
+  .rbar{position:relative;left:auto;bottom:auto;transform:none;display:inline-flex;margin:0 0 24px;padding:4px}
+  .rbar button{padding:7px 20px}
+  .rsel{top:4px;bottom:4px}
+  .rutina{max-width:760px;margin:0 auto}
+  .icon{width:32px;height:32px}
+  .icon::after,.btn.sm::after{display:none}
+  .pop-item{min-height:32px;padding:7px 12px;border-radius:12px}
+  .seg button{min-height:28px;padding:5px 14px}
+  #menu{left:40px;top:84px}
+  #sheet{left:50%;top:50%;bottom:auto;right:auto;width:min(560px,calc(100vw - 48px));max-height:min(760px,calc(100vh - 48px));border-radius:28px;opacity:0;transform:translate(-50%,-50%) scale(.96);transition:opacity 180ms var(--ease-out),transform 180ms var(--ease-out),visibility 0s linear 180ms}
+  .sheet-open #sheet{opacity:1;transform:translate(-50%,-50%);transition:opacity 240ms var(--ease-out),transform 420ms var(--spring),visibility 0s}
+  .sh-grab{display:none}
+  .sh-scroll{padding:28px 32px}
+  .sw{width:40px;height:24px}
+  .sw::after{width:28px;height:18px}
+  .sw:active::after{width:32px}
+  .sw[aria-checked="true"]::after{transform:translateX(6px)}
+  .sw[aria-checked="true"]:active::after{transform:translateX(2px)}
+  /* El aviso con Deshacer va arriba, lejos del borde inferior */
+  #toast{top:32px;bottom:auto;transform:translate(-50%,-12px) scale(.96)}
+  #sheet.spot{top:16%;left:50%;right:auto;width:min(640px,calc(100vw - 48px));transform:translate(-50%,-10px) scale(.98)}
+  .sheet-open #sheet.spot{transform:translate(-50%,0)}
+  .spot-bar{height:60px;padding:0 24px}
+  .sr-input{font-size:19px}
+  .sr-item{min-height:36px;padding:8px 14px}
+}
+@media (hover:hover) and (pointer:fine){
+  .pop-item:hover{background:var(--field-hi);color:var(--ink)}
+  .check:hover{border-color:var(--ink)}
+  .btn:not(.glass):not(.p):hover{background:var(--field)}
+  .btn.p:hover,.w-btn:hover{filter:brightness(1.08)}
+  .glass:is(button,.cap):hover{filter:brightness(1.06)}
+  .link:hover{color:var(--ink)}
+  .qt:hover .qt-face:not(.qt-back){border-color:var(--accent)}
+  .srow:hover{color:var(--ink)}
+  .srow:hover span:last-child{color:var(--ink2)}
+  .icon:hover{background:var(--field-hi);color:var(--ink)}
+  .rbar button:not([aria-current="true"]):hover{color:var(--ink)}
+  .sr-item:hover{background:var(--field-hi)}
+}
+
+/* ---------- accesibilidad del sistema ---------- */
+/* Aumentar contraste: bordes más marcados, texto terciario más fuerte y vidrio tintado */
+@media (prefers-contrast:more){
+  :root{--ink3:rgba(244,244,245,.72);--line:rgba(255,255,255,.22);--line2:rgba(255,255,255,.4);--g-edge:rgba(255,255,255,.45)}
+  :root[data-theme="light"]{--ink3:rgba(11,13,16,.75);--line:rgba(15,30,50,.22);--line2:rgba(15,30,50,.45);--g-edge:rgba(20,40,70,.5)}
+  .glass{background:var(--g-tint)}
+}
+/* Reducir transparencia: el vidrio se vuelve sólido */
+@media (prefers-reduced-transparency:reduce){
+  .glass,.glass.tint{background:var(--elev);-webkit-backdrop-filter:none;backdrop-filter:none}
+  .glass::before{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+  ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation-duration:.01s}
+  .qt-inner{transition:none}
+  #welcome,#welcome.gone{transform:none;filter:none}
+}
+
+/* ---------- resumen del mes ---------- */
+:root{--l0:#26262c;--l1:#234a1c;--l2:#3f7f31;--l3:#74bf5b;--l4:#bdeca6;--lz:#55555e}
+:root[data-theme="light"]{--l0:#e6e9ee;--l1:#c8e6b8;--l2:#8fcb74;--l3:#4f9a3a;--l4:#2c6a1f;--lz:#b9bec7}
+.r-sum{color:var(--ink2);margin-top:8px;font-size:var(--t-body)}
+.r-sum b{color:var(--ink);font-weight:700}
+.graph{overflow-x:auto;padding:4px 0 8px;scrollbar-width:none}
+.graph::-webkit-scrollbar{display:none}
+.g-meses{display:grid;grid-template-columns:repeat(var(--w,53),var(--cg-p));font-size:var(--t-min);color:var(--ink3);height:16px;width:max-content}
+.g-meses span{grid-row:1;white-space:nowrap}
+.g-cells{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,var(--cg));grid-auto-columns:var(--cg);gap:3px;width:max-content}
+.graph{--cg:10px;--cg-p:13px}
+.cg{display:block;width:var(--cg,10px);height:var(--cg,10px);border-radius:3px;background:var(--l0);padding:0;border:0}
+.cg.l1{background:var(--l1)}.cg.l2{background:var(--l2)}.cg.l3{background:var(--l3)}.cg.l4{background:var(--l4)}
+.cg.fut{background:transparent;box-shadow:inset 0 0 0 1px var(--line)}
+.cg.out{background:transparent}
+.cg.hoy{outline:1.5px solid var(--accent);outline-offset:1px}
+.cg.crit{box-shadow:inset 0 0 0 1.5px var(--ink)}
+button.cg{cursor:pointer}
+.escala{display:flex;align-items:center;gap:4px;font-size:var(--t-min);color:var(--ink3);margin-top:8px;flex-wrap:wrap}
+.escala span{margin:0 4px}
+.escala .cg{--cg:10px}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.c-dow{font-size:var(--t-min);color:var(--ink3);text-align:center;padding-bottom:2px}
+.c-day{position:relative;aspect-ratio:1/1.05;border-radius:12px;padding:6px;display:flex;flex-direction:column;justify-content:space-between;background:var(--l0);color:var(--ink);text-align:left;border:0;transition:transform 420ms var(--spring)}
+button.c-day{cursor:pointer}
+button.c-day:active{transform:scale(.94);transition-duration:120ms}
+.c-day b{font-size:var(--t-small);font-weight:700}
+.c-day small{font-size:var(--t-min);font-weight:600;opacity:.9}
+.c-day.l1,.c-day.l2{background:var(--l2);color:#fff}
+.c-day.l1{background:var(--l1)}
+.c-day.l3{background:var(--l3);color:#0b0b0c}.c-day.l4{background:var(--l4);color:#0b0b0c}
+:root[data-theme="light"] .c-day.l3,:root[data-theme="light"] .c-day.l4{color:#fff}
+:root[data-theme="light"] .c-day.l1,:root[data-theme="light"] .c-day.l2{color:#0b0d10}
+.c-day.fut{background:transparent;box-shadow:inset 0 0 0 1px var(--line);color:var(--ink3)}
+.c-day.hoy{box-shadow:inset 0 0 0 2px var(--accent)}
+.c-crit{position:absolute;top:7px;right:7px;width:7px;height:7px;border-radius:50%;background:currentColor}
+.heatwrap{overflow-x:auto;scrollbar-width:none}
+.heatwrap::-webkit-scrollbar{display:none}
+.heat{display:grid;grid-template-columns:88px repeat(var(--n),16px);gap:3px;align-items:center;width:max-content}
+.h-d{font-size:var(--t-min);color:var(--ink3);text-align:center}
+.h-l{display:flex;align-items:center;gap:6px;font-size:var(--t-small);font-weight:600;white-space:nowrap}
+.h-l i{width:9px;height:9px;border-radius:3px;flex:none}
+.h-c{display:block;height:16px;border-radius:4px;background:var(--l0)}
+.h-c.fut{background:transparent;box-shadow:inset 0 0 0 1px var(--line)}
+.h-c.lz{background:var(--lz)}
+.h-c.l1{background:var(--l1)}.h-c.l2{background:var(--l2)}.h-c.l3{background:var(--l3)}.h-c.l4{background:var(--l4)}
+.icon:disabled{opacity:.3;cursor:default}
+@media (min-width:820px){
+  .graph{--cg:11px;--cg-p:14px;padding-top:4px}
+  .c-day{aspect-ratio:auto;min-height:72px;padding:8px;border-radius:14px}
+  .c-day b{font-size:13px}.c-day small{font-size:11px}
+  .heat{grid-template-columns:96px repeat(var(--n),minmax(16px,1fr));width:100%}
+}
+
+/* ---------- botones circulares: palomita (guardar), bote (eliminar), volver ---------- */
+.c-btn{width:var(--h-btn);height:var(--h-btn);border-radius:50%;display:grid;place-items:center;flex:none;transition:transform 420ms var(--spring),filter 200ms ease}
+.c-btn:active{transform:scale(.92);transition-duration:120ms;transition-timing-function:var(--ease-out)}
+.c-btn svg{width:22px;height:22px;stroke-width:2}
+.c-btn.ok{background:var(--accent-strong);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(0,0,0,.12),inset 0 0 0 1px rgba(255,255,255,.18),0 8px 20px -8px color-mix(in srgb,var(--accent-strong) 75%,transparent)}
+.c-btn.ok svg{stroke-width:2.4}
+.c-btn.del{color:var(--danger)}
+.sh-foot{align-items:center}
+
+/* ---------- Editar rutina ---------- */
+.e-head{display:flex;align-items:center;gap:12px}
+.semana{position:relative;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px;margin-top:16px;padding:4px;border-radius:22px;background:var(--field);border:1px solid var(--line)}
+.semana button{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:1px;min-height:44px;padding:6px 0;border-radius:18px;color:var(--ink2);transition:background 200ms ease,color 200ms ease,transform 420ms var(--spring)}
+.semana button:active{transform:scale(.94);transition-duration:120ms}
+.semana b{font-size:var(--t-sec);font-weight:600}
+.semana small{font-size:var(--t-min);color:var(--ink3);white-space:nowrap}
+.semana [aria-pressed="true"]{background:var(--fill);color:var(--on-fill)}
+.semana [aria-pressed="true"] small{color:inherit;opacity:.7}
+.eq{margin-top:4px;color:var(--ink2);font-size:var(--t-body)}
+.eq b{color:var(--ink)}
+.bar24{display:flex;gap:1px;height:10px;border-radius:5px;overflow:hidden;margin-top:12px}
+.bar24 i{display:block;min-width:1px}
+.warn-msg{margin-top:12px;color:var(--danger);font-size:var(--t-sec);font-weight:600}
+.e-tools{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;margin:16px 0 8px}
+.e-tools svg{width:13px;height:13px;margin-left:-2px;opacity:.7}
+.copiar{position:relative;cursor:pointer}
+.copiar select{position:absolute;inset:0;width:100%;opacity:0;cursor:pointer;font-size:16px}
+.sec+.blocks{margin-top:16px}
+.bk.gap{border:1.5px dashed var(--line2);color:var(--ink3);font-weight:500;transition:transform 420ms var(--spring),border-color 200ms ease,color 200ms ease}
+.bk.gap:active{transform:scale(.985);transition-duration:120ms}
+.bk.choca{outline:2px solid var(--danger);outline-offset:2px}
+.bk-n small.warn{font-weight:700;opacity:1}
+/* hoja de actividad */
+.tipos{display:flex;flex-wrap:wrap;gap:6px}
+.tipos button{display:inline-flex;align-items:center;gap:7px;min-height:36px;padding:0 13px;border-radius:999px;background:var(--field);font-size:var(--t-sec);font-weight:500;color:var(--ink2);transition:background 200ms ease,color 200ms ease}
+.tipos i{width:10px;height:10px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(127,127,127,.4)}
+.tipos [aria-checked="true"]{background:var(--fill);color:var(--on-fill);font-weight:600}
+.cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 12px;margin-top:16px}
+.cols .field+.field{margin-top:0}
+.cols[hidden]{display:none}
+.sw-row{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line);font-weight:600}
+.sw-row small{display:block;font-size:var(--t-small);font-weight:400;color:var(--ink3)}
+.sw-row .sw{margin-bottom:0}
+.sw{flex:none}
+@media (min-width:820px){
+  .c-btn svg{width:17px;height:17px}
+  .semana button{min-height:40px}
+  .cols{grid-template-columns:repeat(4,minmax(0,1fr))}
+  #a-trayf{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (hover:hover) and (pointer:fine){
+  .c-btn.ok:hover{filter:brightness(1.08)}
+  .semana button:not([aria-pressed="true"]):hover{color:var(--ink)}
+  .tipos button:not([aria-checked="true"]):hover{background:var(--field-hi);color:var(--ink)}
+  .bk.gap:hover{border-color:var(--ink3);color:var(--ink2)}
+}
+
+/* ---------- selector de día con gel ---------- */
+.ssel{position:absolute;top:4px;bottom:4px;border-radius:18px;background:var(--fill);z-index:0;pointer-events:none}
+.semana.moviendo [aria-pressed="true"]{background:transparent}
+
+/* ---------- barra de 24 h: leyenda por tipo ---------- */
+.leyenda{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;font-size:var(--t-small);color:var(--ink2)}
+.leyenda li{display:inline-flex;align-items:center;gap:6px}
+.leyenda i{width:9px;height:9px;border-radius:3px;box-shadow:inset 0 0 0 1px rgba(127,127,127,.35)}
+.leyenda b{color:var(--ink);font-weight:600}
+.leyenda .libre b{color:var(--ink)}
+
+/* ---------- menú desplegable ---------- */
+.dd{position:fixed;z-index:45;min-width:180px;max-height:min(60dvh,420px);overflow-y:auto;padding:6px;border-radius:20px;opacity:0;transform:scale(.9);transition:opacity 160ms var(--ease-out),transform 380ms var(--spring)}
+.dd.show{opacity:1;transform:none}
+.dd button{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;padding:8px 12px;border-radius:14px;font-size:var(--t-body);color:var(--ink);white-space:nowrap;transition:background 120ms ease}
+.dd button small{margin-left:auto;padding-left:16px;font-size:var(--t-small);color:var(--ink3)}
+.dd button[aria-selected="true"]{font-weight:600}
+.dd button[aria-selected="true"]::after{content:"";width:6px;height:10px;margin-left:auto;padding-left:0;border:solid var(--ink);border-width:0 2px 2px 0;transform:rotate(45deg) translate(-2px,-2px)}
+.dd button:focus-visible{outline:0;background:var(--field-hi)}
+.dd button svg{width:15px;height:15px;color:var(--ink2)}
+.dd .dot{width:10px;height:10px;border-radius:50%;flex:none;box-shadow:inset 0 0 0 1px rgba(127,127,127,.4)}
+.dd hr{border:0;border-top:1px solid var(--line);margin:6px 8px}
+
+/* ---------- selector de tipo y editor de tipos ---------- */
+.t-sel{display:flex;align-items:center;gap:10px;width:100%;height:var(--h-inp);padding:0 14px;border-radius:14px;background:var(--field);font-size:16px;font-weight:500;transition:background 180ms ease}
+.t-sel i{width:12px;height:12px;border-radius:50%;flex:none;box-shadow:inset 0 0 0 1px rgba(127,127,127,.4)}
+.t-sel svg{margin-left:auto;width:14px;height:14px;color:var(--ink3);transition:transform 260ms var(--spring)}
+.t-sel[aria-expanded="true"]{background:var(--field-hi)}
+.t-sel[aria-expanded="true"] svg{transform:rotate(180deg)}
+.sh-h{font-size:var(--t-sheet);font-weight:700}
+.t-editor .note{margin:12px 0 4px}
+.t-lista{list-style:none;padding:0;margin:8px 0 16px}
+.t-lista li{display:grid;grid-template-columns:36px minmax(0,1fr) var(--h-btn);gap:10px;align-items:center;padding:6px 0}
+.t-color{position:relative;width:32px;height:32px;border-radius:50%;background:var(--c);box-shadow:inset 0 0 0 1px rgba(127,127,127,.4),0 0 0 3px var(--field);cursor:pointer;justify-self:center}
+.t-color input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0}
+.t-color:focus-within{outline:2px solid var(--accent);outline-offset:3px}
+.c-btn.del svg{width:20px;height:20px}
+
+/* ---------- celular: sin círculo de edición (se edita manteniendo presionado) ---------- */
+@media (max-width:819px){
+  .qt-face>.check{display:none}
+  .qt-hit{padding-right:0}
+}
+@media (hover:hover) and (pointer:fine){
+  .dd button:hover{background:var(--field-hi)}
+  .t-sel:hover{background:var(--field-hi)}
+}
+
+/* ---------- barra superior de la hoja: volver · título · palomita ---------- */
+.sh-bar{display:flex;align-items:center;gap:12px}
+.sh-bar .sh-h{flex:1}
+/* Celular: en las hojas de actividad y de pendiente, eliminar y guardar van arriba */
+#f-act[hidden],#f-det[hidden]{display:none!important}
+@media (max-width:819px){
+  #f-act,#f-det{display:flex;flex-direction:column}
+  #f-act>.sh-foot,#f-det>.sh-foot{order:-1;margin:0 0 8px}
+}

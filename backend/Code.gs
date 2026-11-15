@@ -156,7 +156,7 @@ function configurar() {
 }
 
 /* Dirección de la app en GitHub Pages; se llena al publicar (ej. https://tu-usuario.github.io/enzo/). */
-var APP_URL = '';
+var APP_URL = 'https://spmdavidmdsg-netizen.github.io/enzo/';
 
 /** Muestra tu enlace de conexión. Ábrelo una vez en la Mac y otra en el iPhone y quedan conectados. */
 function verEnlace() {

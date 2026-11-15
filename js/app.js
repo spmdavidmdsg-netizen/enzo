@@ -169,7 +169,8 @@ function pintarMenu() {
       <div class="state" data-s="${est.s}"><i></i>${TEXTO_SYNC[est.s]}${est.s === 'ok' ? hace(est.ultimo) : ''}</div>
       ${est.s === 'error' ? `<p class="note" style="margin-top:6px">${esc(est.error)}</p>` : ''}
       ${con ? '<div class="row"><button class="btn" data-m="sync">Sincronizar ahora</button></div>'
-        : '<p class="note" style="margin-top:6px">Para guardar en Google Sheets y ver tus datos en todos tus dispositivos, abre aquí tu enlace de conexión.</p>'}
+        : `<p class="note" style="margin-top:6px">Para guardar en Google Sheets y ver tus datos en todos tus dispositivos, pega aquí tu enlace de conexión.</p>
+           <div class="row"><input class="inp" id="m-enlace" placeholder="Enlace de conexión" autocomplete="off" autocapitalize="off" spellcheck="false"><button class="btn p" data-m="conectar">Conectar</button></div>`}
     </div>
     ${matchMedia('(hover:hover) and (pointer:fine)').matches ? '<p class="note keys-note">Atajos: <kbd>1</kbd> Pendientes · <kbd>2</kbd> Rutina · <kbd>N</kbd> nuevo pendiente · <kbd>B</kbd> buscar · <kbd>C</kbd> claro u oscuro</p>' : ''}`;
 }
@@ -192,17 +193,24 @@ menu.addEventListener('click', async e => {
     return;
   }
   if (b.dataset.m === 'sync') { await store.sincronizar(); pintarMenu(); }
+  if (b.dataset.m === 'conectar') {
+    const v = $('#m-enlace').value.trim(), t = (/#conectar=([\w-]+)/.exec(v) || [, /^[\w-]{20,}$/.test(v) ? v : ''])[1];
+    if (!t) { toast('Pega el enlace completo que te dio verEnlace.'); return; }
+    b.textContent = 'Conectando…'; b.disabled = true;
+    await conectarCon(t);
+    pintarMenu();
+  }
 });
 
 /* ---------- enlace de conexión: …/#conectar=TOKEN ----------
    Se abre una vez en cada dispositivo. El token se guarda aquí y se borra de la barra de direcciones. */
 const enlace = /#conectar=([\w-]+)/.exec(location.hash);
 if (enlace) history.replaceState(null, '', location.pathname + location.search);
-async function conectarConEnlace() {
-  if (!enlace) return;
+async function conectarConEnlace() { if (enlace) await conectarCon(enlace[1]); }
+async function conectarCon(token) {
   try {
-    await api.probar(enlace[1]);
-    api.guardarToken(enlace[1]);
+    await api.probar(token);
+    api.guardarToken(token);
     await store.sincronizar();
     toast('Conectado. Tus datos se guardan en Google Sheets.');
   } catch (x) {

@@ -592,3 +592,5 @@ button.c-day:active{transform:scale(.94);transition-duration:120ms}
   #f-act,#f-det{display:flex;flex-direction:column}
   #f-act>.sh-foot,#f-det>.sh-foot{order:-1;margin:0 0 8px}
 }
+
+#m-enlace{flex:1;min-width:0}

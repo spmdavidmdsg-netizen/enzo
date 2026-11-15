@@ -1,7 +1,7 @@
 /* Service worker de Enzo: guarda la app para abrirla sin internet.
    Estrategia: primero la red (para recibir actualizaciones) y, si falla, la copia guardada.
    Las llamadas a Apps Script no pasan por aquí: son de otro dominio. */
-const VERSION = 'enzo-v11';
+const VERSION = 'enzo-v12';
 const SHELL = [
   './', 'index.html', 'manifest.json', 'css/app.css',
   'js/app.js', 'js/config.js', 'js/util.js', 'js/store.js', 'js/api.js', 'js/tipos.js',

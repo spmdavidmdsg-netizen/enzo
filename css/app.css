@@ -206,6 +206,7 @@ body:not([data-page="pendientes"]) :is(.fab,.lupa){display:none}
 @media (min-width:820px){.lupa{display:none}}
 
 /* ---------- barra de Rutina en píldora de vidrio (celular abajo, Mac arriba) ---------- */
+.rbar[hidden],body:not([data-page="rutina"]) .rbar{display:none}
 .rbar{position:fixed;left:50%;bottom:calc(var(--safe-b) + 14px);z-index:15;transform:translateX(-50%);display:flex;padding:5px;border-radius:999px}
 .rbar button{position:relative;z-index:1;max-width:160px;overflow:hidden;padding:11px 18px;border-radius:999px;font-size:var(--t-body);font-weight:600;color:var(--ink2);white-space:nowrap;transition:transform 420ms var(--spring),background-color 200ms ease,color 260ms ease,max-width 420ms var(--spring),padding 420ms var(--spring),opacity 260ms ease}
 .rbar button[aria-current="true"]{background:var(--fill);color:var(--on-fill)}
@@ -295,10 +296,15 @@ body:not([data-page="pendientes"]) :is(.fab,.lupa){display:none}
 #toast button::after{content:"";position:absolute;inset:-12px -10px}
 
 /* ---------- transiciones entre páginas ---------- */
-::view-transition-old(root){animation:vt-out 160ms ease both}
+/* La página nueva aparece encima de la anterior, que se queda visible debajo: así nunca se ve el fondo vacío.
+   Al cambiar de página, la barra superior se queda quieta. */
+::view-transition-old(root){animation:none}
 ::view-transition-new(root){animation:vt-in 240ms var(--ease-out) both}
-@keyframes vt-out{to{opacity:0}}
-@keyframes vt-in{from{opacity:0;transform:translateY(6px)}}
+@keyframes vt-in{from{opacity:0}}
+.vt-pagina .top{view-transition-name:barra-sup}
+.vt-pagina .rbar{view-transition-name:barra-rutina}
+::view-transition-old(barra-sup),::view-transition-old(barra-rutina){display:none}
+::view-transition-new(barra-sup),::view-transition-new(barra-rutina){animation:none}
 
 /* ---------- detalle ---------- */
 .area{height:auto;min-height:76px;padding:12px 14px;resize:vertical;line-height:1.45;margin-bottom:16px}
@@ -364,7 +370,9 @@ kbd{font:inherit;font-size:var(--t-min);padding:1px 6px;border:1px solid var(--l
   /* En la Mac nada de controles abajo: la captura sube junto al menú */
   .fab{position:relative;right:auto;bottom:auto;width:var(--h-cap);height:var(--h-cap)}
   .fab i{width:14px;height:14px;border-width:2px}
-  .rbar{position:relative;left:auto;bottom:auto;transform:none;display:inline-flex;margin:0 0 24px;padding:4px}
+  /* Mac: la barra va arriba de la columna de Rutina; la columna le deja espacio */
+  .rbar{position:absolute;top:120px;left:max(40px,calc(50% - 380px));bottom:auto;transform:none;display:inline-flex;padding:4px}
+  .rutina.con-barra{padding-top:66px}
   .rbar button{padding:7px 20px}
   .rsel{top:4px;bottom:4px}
   .rutina{max-width:760px;margin:0 auto}

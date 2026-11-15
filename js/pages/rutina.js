@@ -25,14 +25,23 @@ function leer(k, d) { try { return localStorage.getItem(k) || d; } catch (e) { r
 function fijar(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
 const nombreDia = k => DIAS[DIAS_SEMANA.indexOf(k)];
 
-const barra = () => `<nav class="rbar glass${ui.min ? ' min' : ''}" aria-label="Secciones de rutina">${VISTAS.map(v => `<button data-vista="${v[0]}" aria-current="${v[0] === ui.vista}">${v[1]}</button>`).join('')}</nav>`;
+/* La barra Rutina · Resumen · Ejercicio es un solo elemento que nunca se reconstruye
+   (en el iPhone, rehacer el vidrio en cada cambio produce un parpadeo). */
+const barraEl = () => document.getElementById('rbar');
+function pintarBarra() {
+  const bar = barraEl(); if (!bar) return;
+  if (!bar.childElementCount) bar.innerHTML = VISTAS.map(v => `<button data-vista="${v[0]}">${v[1]}</button>`).join('');
+  bar.querySelectorAll('[data-vista]').forEach(b => b.setAttribute('aria-current', b.dataset.vista === ui.vista));
+  bar.classList.toggle('min', ui.min);
+  bar.hidden = ui.editando;
+}
 
 export function render(ctx) {
   if (ui.editando) return `<div class="rutina">${editar(ctx)}</div>`;
   const cuerpo = ui.vista === 'rutina' ? dia(ctx)
     : ui.vista === 'resumen' ? resumen(ctx)
     : `<h1 class="st">Ejercicio</h1><p class="empty st" style="--i:1">Aquí vivirán tus rutinas de ejercicio. La diseñamos con el video de tu app de referencia.</p>`;
-  return `<div class="rutina">${barra()}${cuerpo}</div>`;
+  return `<div class="rutina con-barra">${cuerpo}</div>`;
 }
 
 function etiquetaDia(f) {
@@ -262,7 +271,15 @@ function copiarDia(ctx, desde) {
 export function montar(view, ctx) {
   const g = view.querySelector('.graph');
   if (g) { const h = g.querySelector('.cg.hoy'); g.scrollLeft = h ? h.offsetLeft - g.clientWidth / 2 : g.scrollWidth; }
-  gel(view); resorteModo(view); gelSemana(view);
+  pintarBarra(); gel(); resorteModo(view); gelSemana(view);
+  const bar = barraEl();
+  if (bar) bar.onclick = e => {
+    const v = e.target.closest('[data-vista]');
+    if (!v || v.dataset.vista === ui.vista) return;
+    const actual = bar.querySelector('[aria-current="true"]');
+    ui.selDesde = actual ? { x: actual.offsetLeft, w: actual.offsetWidth } : null;
+    ui.vista = v.dataset.vista; fijar('enzo-rutina-vista', ui.vista); ctx.render();
+  };
   view.addEventListener('click', e => {
     if (e.target.closest('[data-volver]')) { ui.editando = false; ctx.render(); window.scrollTo(0, 0); return; }
     if (e.target.closest('[data-editar]')) { ui.editando = true; ui.diaEdit = DIAS_SEMANA[desdeIso(ui.fecha).getDay()]; ctx.render(); window.scrollTo(0, 0); return; }
@@ -287,13 +304,6 @@ export function montar(view, ctx) {
     const ac = e.target.closest('[data-act]');
     if (ac) { abrirActividad(ctx, ac.dataset.act); return; }
 
-    const v = e.target.closest('[data-vista]');
-    if (v) {
-      if (v.dataset.vista === ui.vista) return;
-      const actual = view.querySelector('.rbar [aria-current="true"]');
-      ui.selDesde = actual ? { x: actual.offsetLeft, w: actual.offsetWidth } : null;
-      ui.vista = v.dataset.vista; fijar('enzo-rutina-vista', ui.vista); ctx.render(); return;
-    }
     const bm = e.target.closest('[data-modo]');
     if (bm) { ui.anchoModo = bm.offsetWidth; ui.modo = ui.modo === 'critica' ? 'performance' : 'critica'; ui.cambioModo = true; fijar('enzo-rutina-modo', ui.modo); ctx.render(); return; }
     const mm = e.target.closest('[data-mes]');
@@ -312,9 +322,9 @@ export function montar(view, ctx) {
 }
 
 /* La selección viaja a la nueva sección y se estira a medio camino, como gel. */
-function gel(view) {
+function gel() {
   const desde = ui.selDesde; ui.selDesde = null;
-  const bar = view.querySelector('.rbar'), b = bar && bar.querySelector('[aria-current="true"]');
+  const bar = barraEl(), b = bar && bar.querySelector('[aria-current="true"]');
   if (!desde || !b || reduceMotion()) return;
   const x = b.offsetLeft, w = b.offsetWidth, a = Math.min(desde.x, x), z = Math.max(desde.x + desde.w, x + w);
   const sel = document.createElement('span'); sel.className = 'rsel';
@@ -357,7 +367,7 @@ function resorteModo(view) {
 /* iPhone: la barra se encoge a la sección activa al bajar y regresa al subir. */
 let ultimoY = 0;
 window.addEventListener('scroll', () => {
-  const y = window.scrollY, bar = document.querySelector('.rbar');
+  const y = window.scrollY, bar = barraEl();
   const min = innerWidth < 820 && (y > ultimoY + 2 && y > 30 ? true : y < ultimoY - 2 || y <= 30 ? false : ui.min);
   ultimoY = y;
   if (min === ui.min) return;
@@ -416,7 +426,8 @@ function resumen({ store }) {
   }
 
   /* Heatmap por tipo */
-  const tipos = Object.keys(TIPOS).filter(t => s.actividades.some(a => a.tipo === t));
+  const usados = Object.keys(TIPOS).filter(t => s.actividades.some(a => a.tipo === t));
+  const tipos = usados.length ? usados : Object.keys(TIPOS);   // sin rutina aún: todos los tipos, vacíos
   let heat = `<span></span>${Array.from({ length: n }, (_, i) => `<span class="h-d">${i + 1}</span>`).join('')}`;
   tipos.forEach(t => {
     heat += `<span class="h-l"><i style="background:${TIPOS[t].color}"></i>${TIPOS[t].l}</span>`;
@@ -438,5 +449,5 @@ function resumen({ store }) {
       <div class="graph" style="--w:${semanas}"><div class="g-meses" aria-hidden="true">${meses}</div><div class="g-cells">${celdas}</div></div>
       <div class="escala" aria-hidden="true"><span>Menos</span><i class="cg l0"></i><i class="cg l1"></i><i class="cg l2"></i><i class="cg l3"></i><i class="cg l4"></i><span>Más</span><i class="cg l2 crit"></i><span>Línea Crítica</span></div></section>
     <section class="sec st" style="--i:3"><span class="h">Calendario</span><div class="cal">${cal}</div></section>
-    ${tipos.length ? `<section class="sec st" style="--i:4"><span class="h">Heatmap por tipo</span><div class="heatwrap"><div class="heat" style="--n:${n}">${heat}</div></div></section>` : ''}`;
+    <section class="sec st" style="--i:4"><span class="h">Heatmap por tipo</span><div class="heatwrap"><div class="heat" style="--n:${n}">${heat}</div></div>${usados.length ? '' : '<p class="note" style="margin-top:8px">Se llena cuando tu rutina tenga actividades y las marques como hechas.</p>'}</section>`;
 }

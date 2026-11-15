@@ -41,9 +41,14 @@ function render() {
 
 function ir(id) {
   if (id === ui.page) return;
-  ui.page = id; fijarPref('enzo-pagina', id); entrada = true;
-  if (document.startViewTransition && !reduceMotion()) document.startViewTransition(render);
-  else render();
+  ui.page = id; fijarPref('enzo-pagina', id);
+  if (document.startViewTransition && !reduceMotion()) {
+    /* Con transición, la página entra de una vez (sin la animación escalonada, que la haría parpadear) */
+    const raiz = document.documentElement; raiz.classList.add('vt-pagina');
+    const t = document.startViewTransition(render);
+    t.finished.catch(() => {}).finally(() => raiz.classList.remove('vt-pagina'));
+    t.ready.catch(() => {});
+  } else { entrada = true; render(); }
   window.scrollTo(0, 0);
 }
 
@@ -117,7 +122,7 @@ const esEscritorio = () => matchMedia('(min-width:820px)').matches;
 function alternarTema() {
   const nuevo = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
   fijarPref('enzo-tema', nuevo);
-  if (document.startViewTransition && !reduceMotion()) document.startViewTransition(aplicarTema); else aplicarTema();
+  if (document.startViewTransition && !reduceMotion()) { const t = document.startViewTransition(aplicarTema); t.ready.catch(() => {}); t.finished.catch(() => {}); } else aplicarTema();
   if (menu.classList.contains('open')) pintarMenu();
 }
 let meLp = null, meUsado = false;

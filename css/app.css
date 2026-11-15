@@ -84,7 +84,7 @@ body{
   font-size:var(--t-body);line-height:1.45;color:var(--ink);background:var(--solid);
   -webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;-webkit-tap-highlight-color:transparent;
 }
-body::before{content:"";position:fixed;inset:0;bottom:calc(-1 * env(safe-area-inset-bottom,0px));background:var(--bg);z-index:-1}
+body::before{content:"";position:fixed;inset:0;bottom:calc(-1 * (env(safe-area-inset-bottom,0px) + var(--hueco,0px)));background:var(--bg);z-index:-1}
 ::selection{background:var(--accent-strong);color:#fff}
 button,input,select,textarea{font:inherit;color:inherit}
 button{background:none;border:0;padding:0;cursor:pointer;text-align:inherit;touch-action:manipulation;-webkit-user-select:none;user-select:none}
@@ -199,10 +199,10 @@ h1{font-size:var(--t-title);font-weight:700;letter-spacing:-.02em;line-height:1.
 .side-empty{color:var(--ink3);padding:8px 0;font-size:var(--t-sec)}
 
 /* ---------- botón de captura: círculo de vidrio (abajo en el iPhone, arriba en la Mac) ---------- */
-.fab{position:fixed;right:16px;bottom:calc(var(--safe-b) + 16px);z-index:15;width:56px;height:56px;border-radius:50%;display:grid;place-items:center}
+.fab{position:fixed;right:16px;bottom:calc(var(--safe-b) + 16px - var(--hueco,0px));z-index:15;width:56px;height:56px;border-radius:50%;display:grid;place-items:center}
 .fab i{width:19px;height:19px;border-radius:50%;border:2.5px solid var(--ink)}
 /* Lupa: abajo a la izquierda en Pendientes (solo celular; en la Mac se busca con B) */
-.lupa{position:fixed;left:16px;bottom:calc(var(--safe-b) + 16px);z-index:15;width:56px;height:56px;border-radius:50%;display:grid;place-items:center;transition:transform 420ms var(--spring)}
+.lupa{position:fixed;left:16px;bottom:calc(var(--safe-b) + 16px - var(--hueco,0px));z-index:15;width:56px;height:56px;border-radius:50%;display:grid;place-items:center;transition:transform 420ms var(--spring)}
 .lupa:active{transform:scale(.94);transition-duration:120ms;transition-timing-function:var(--ease-out)}
 .lupa svg{width:22px;height:22px;stroke-width:2}
 body:not([data-page="pendientes"]) :is(.fab,.lupa){display:none}
@@ -210,7 +210,7 @@ body:not([data-page="pendientes"]) :is(.fab,.lupa){display:none}
 
 /* ---------- barra de Rutina en píldora de vidrio (celular abajo, Mac arriba) ---------- */
 .rbar[hidden],body:not([data-page="rutina"]) .rbar{display:none}
-.rbar{position:fixed;left:50%;bottom:calc(var(--safe-b) + 14px);z-index:15;transform:translateX(-50%);display:flex;padding:5px;border-radius:999px}
+.rbar{position:fixed;left:50%;bottom:calc(var(--safe-b) + 14px - var(--hueco,0px));z-index:15;transform:translateX(-50%);display:flex;padding:5px;border-radius:999px}
 .rbar button{position:relative;z-index:1;max-width:160px;overflow:hidden;padding:11px 18px;border-radius:999px;font-size:var(--t-body);font-weight:600;color:var(--ink2);white-space:nowrap;transition:transform 420ms var(--spring),background-color 200ms ease,color 260ms ease,max-width 420ms var(--spring),padding 420ms var(--spring),opacity 260ms ease}
 .rbar button[aria-current="true"]{background:var(--fill);color:var(--on-fill)}
 .rbar.moviendo button[aria-current="true"]{background:transparent}
@@ -281,7 +281,7 @@ body:not([data-page="pendientes"]) :is(.fab,.lupa){display:none}
 
 /* ---------- hoja (editor) ---------- */
 #scrim{position:fixed;inset:0;z-index:30;background:var(--scrim);opacity:0;pointer-events:none;transition:opacity 260ms var(--ease-out)}
-#sheet{position:fixed;z-index:31;left:8px;right:8px;bottom:calc(var(--safe-b) + 8px);max-height:86dvh;border-radius:32px;transform:translateY(calc(100% + 20px));visibility:hidden;transition:transform 380ms var(--ease-drawer),visibility 0s linear 380ms;display:flex;flex-direction:column;overflow:hidden}
+#sheet{position:fixed;z-index:31;left:8px;right:8px;bottom:calc(var(--safe-b) + 8px - var(--hueco,0px));max-height:86dvh;border-radius:32px;transform:translateY(calc(100% + 20px));visibility:hidden;transition:transform 380ms var(--ease-drawer),visibility 0s linear 380ms;display:flex;flex-direction:column;overflow:hidden}
 #sheet:focus{outline:0}
 #sheet.morph{transition:none!important;transform-origin:top left}
 .sheet-open #scrim{opacity:1;pointer-events:auto}
@@ -293,7 +293,7 @@ body:not([data-page="pendientes"]) :is(.fab,.lupa){display:none}
 .sh-foot{display:flex;justify-content:space-between;gap:12px;margin-top:20px}
 
 /* ---------- aviso ---------- */
-#toast{position:fixed;left:50%;bottom:calc(var(--safe-b) + 88px);z-index:40;display:flex;align-items:center;gap:16px;min-width:0;min-height:46px;padding:0 20px;border-radius:999px;white-space:nowrap;font-size:var(--t-body);opacity:0;visibility:hidden;transform:translate(-50%,12px) scale(.96);transition:opacity 260ms ease,transform 420ms var(--spring),visibility 0s linear 260ms}
+#toast{position:fixed;left:50%;bottom:calc(var(--safe-b) + 88px - var(--hueco,0px));z-index:40;display:flex;align-items:center;gap:16px;min-width:0;min-height:46px;padding:0 20px;border-radius:999px;white-space:nowrap;font-size:var(--t-body);opacity:0;visibility:hidden;transform:translate(-50%,12px) scale(.96);transition:opacity 260ms ease,transform 420ms var(--spring),visibility 0s linear 260ms}
 #toast.show{opacity:1;visibility:visible;transform:translate(-50%,0);transition-delay:0s}
 #toast button{position:relative;font-weight:600;color:var(--accent-text)}
 #toast button::after{content:"";position:absolute;inset:-12px -10px}

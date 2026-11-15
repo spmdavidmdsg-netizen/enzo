@@ -5,6 +5,7 @@ import * as api from './api.js';
 import * as pendientes from './pages/pendientes.js';
 import * as rutina from './pages/rutina.js';
 import { cargarTipos } from './tipos.js';
+import { VERSION_APP } from './config.js';
 
 const PAGES = [
   { id: 'pendientes', nombre: 'Pendientes', mod: pendientes },
@@ -177,7 +178,8 @@ function pintarMenu() {
         : `<p class="note" style="margin-top:6px">Para guardar en Google Sheets y ver tus datos en todos tus dispositivos, pega aquí tu enlace de conexión.</p>
            <div class="row"><input class="inp" id="m-enlace" placeholder="Enlace de conexión" autocomplete="off" autocapitalize="off" spellcheck="false"><button class="btn p" data-m="conectar">Conectar</button></div>`}
     </div>
-    ${matchMedia('(hover:hover) and (pointer:fine)').matches ? '<p class="note keys-note">Atajos: <kbd>1</kbd> Pendientes · <kbd>2</kbd> Rutina · <kbd>N</kbd> nuevo pendiente · <kbd>B</kbd> buscar · <kbd>C</kbd> claro u oscuro</p>' : ''}`;
+    ${matchMedia('(hover:hover) and (pointer:fine)').matches ? '<p class="note keys-note">Atajos: <kbd>1</kbd> Pendientes · <kbd>2</kbd> Rutina · <kbd>N</kbd> nuevo pendiente · <kbd>B</kbd> buscar · <kbd>C</kbd> claro u oscuro</p>' : ''}
+    <p class="note" style="margin-top:12px;text-align:right">Versión ${VERSION_APP}</p>`;
 }
 
 menu.addEventListener('input', e => {
@@ -334,6 +336,24 @@ function toast(msg, deshacer) {
   el.classList.add('show');
   clearTimeout(tt); tt = setTimeout(() => el.classList.remove('show'), deshacer ? 5000 : 2600);
 }
+
+/* ---------- iPhone: altura real de la pantalla ----------
+   En la app instalada, iOS a veces mide la vista más baja que la pantalla (en páginas cortas) y todo lo
+   fijo abajo queda más arriba. Medimos ese hueco y lo restamos; cuando iOS mide bien, el hueco es 0. */
+const sonda = Object.assign(document.createElement('i'), { ariaHidden: 'true' });
+sonda.style.cssText = 'position:fixed;top:0;bottom:0;left:0;width:0;visibility:hidden;pointer-events:none';
+document.body.append(sonda);
+function ajustarAltura() {
+  const instalada = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
+  const vertical = innerHeight >= innerWidth;
+  const alto = vertical ? Math.max(screen.height, screen.width) : Math.min(screen.height, screen.width);   // alto real de la pantalla
+  const h = instalada ? Math.round(alto - sonda.getBoundingClientRect().height) : 0;   // lo que le falta al área de lo fijo
+  document.documentElement.style.setProperty('--hueco', (h > 0 && h < 160 ? h : 0) + 'px');
+}
+addEventListener('resize', ajustarAltura);
+addEventListener('scroll', () => requestAnimationFrame(ajustarAltura), { passive: true });
+store.escuchar(() => requestAnimationFrame(ajustarAltura));
+ajustarAltura();
 
 /* ---------- inicio ---------- */
 aplicarTema();

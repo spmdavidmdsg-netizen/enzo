@@ -1,7 +1,7 @@
 /* Service worker de Enzo: guarda la app para abrirla sin internet.
    Estrategia: primero la red (para recibir actualizaciones) y, si falla, la copia guardada.
    Las llamadas a Apps Script no pasan por aquí: son de otro dominio. */
-const VERSION = 'enzo-v13';
+const VERSION = 'enzo-v14';
 const SHELL = [
   './', 'index.html', 'manifest.json', 'css/app.css',
   'js/app.js', 'js/config.js', 'js/util.js', 'js/store.js', 'js/api.js', 'js/tipos.js',
@@ -10,7 +10,7 @@ const SHELL = [
 ];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL.map(u => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', e => {

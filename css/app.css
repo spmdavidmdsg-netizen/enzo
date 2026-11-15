@@ -72,7 +72,10 @@
 }
 
 *{box-sizing:border-box;margin:0}
-html{height:100%;font-size:17px;-webkit-text-size-adjust:100%}
+/* iPhone (app en inicio con barra translúcida): si la página es más baja que la pantalla, iOS mide la vista
+   sin la zona de estado y lo fijo abajo queda más arriba y el fondo cortado. Con la página siempre un poco
+   más alta que la pantalla, iOS usa la altura completa en todas las páginas. */
+html{min-height:calc(100% + env(safe-area-inset-top,0px));font-size:17px;-webkit-text-size-adjust:100%}
 /* En el iPhone, la base es el tamaño de texto que elegiste en Ajustes del sistema */
 @supports (font:-apple-system-body){@media (max-width:819px){html{font:-apple-system-body}}}
 html,body{overscroll-behavior:none}
@@ -81,7 +84,7 @@ body{
   font-size:var(--t-body);line-height:1.45;color:var(--ink);background:var(--solid);
   -webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;-webkit-tap-highlight-color:transparent;
 }
-body::before{content:"";position:fixed;inset:0;background:var(--bg);z-index:-1}
+body::before{content:"";position:fixed;inset:0;bottom:calc(-1 * env(safe-area-inset-bottom,0px));background:var(--bg);z-index:-1}
 ::selection{background:var(--accent-strong);color:#fff}
 button,input,select,textarea{font:inherit;color:inherit}
 button{background:none;border:0;padding:0;cursor:pointer;text-align:inherit;touch-action:manipulation;-webkit-user-select:none;user-select:none}

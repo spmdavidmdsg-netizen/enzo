@@ -1,7 +1,7 @@
 /* Service worker de Enzo: guarda la app para abrirla sin internet.
    Estrategia: primero la red (para recibir actualizaciones) y, si falla, la copia guardada.
    Las llamadas a Apps Script no pasan por aquí: son de otro dominio. */
-const VERSION = 'enzo-v12';
+const VERSION = 'enzo-v13';
 const SHELL = [
   './', 'index.html', 'manifest.json', 'css/app.css',
   'js/app.js', 'js/config.js', 'js/util.js', 'js/store.js', 'js/api.js', 'js/tipos.js',
@@ -22,8 +22,9 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET' || url.origin !== location.origin) return;
+  /* cache: 'no-cache' = preguntar siempre al servidor si hay versión nueva (GitHub Pages guarda 10 min). */
   e.respondWith(
-    fetch(e.request)
+    fetch(e.request.url, { cache: 'no-cache', credentials: 'same-origin' })
       .then(r => {
         const copia = r.clone();
         if (r.ok) caches.open(VERSION).then(c => c.put(e.request, copia));

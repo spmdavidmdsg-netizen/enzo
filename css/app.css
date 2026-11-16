@@ -732,14 +732,58 @@ button.c-day:active{transform:scale(.94);transition-duration:120ms}
   .ej-pie{position:static;margin-top:24px}
   .rutina:has(.ej-pie){padding-bottom:0}
   .ej-pie .btn{width:auto;height:var(--h-btn);padding:0 24px;font-size:var(--t-body)}
-  #ej{padding:28px max(24px,calc(50% - 260px)) 32px}
-  .ej-step button{width:32px;height:32px;font-size:18px}
+  /* Mac: imagen grande a la izquierda; ejercicio, registro y controles a la derecha */
+  #ej{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,420px);grid-template-rows:auto auto minmax(0,1fr) auto;column-gap:64px;
+    padding:32px max(48px,calc(50% - 620px)) 40px}
+  .ej-prog,.ej-head{grid-column:1/-1}
+  .ej-head{margin-top:16px}
+  .ej-head .c-btn{width:44px;height:44px}
+  .ej-head .c-btn svg{width:20px;height:20px}
+  .ej-meta{font-size:13px}.ej-meta b{font-size:15px}
+  .ej-escena{grid-column:1;grid-row:3/5;margin:24px 0 0}
+  .ej-escena .ej-foto{border-radius:28px}
+  .ej-escena .ej-foto.vacia{width:min(100%,60vh);font-size:3rem}
+  .ej-info{grid-column:2;grid-row:3;align-self:end;text-align:left;padding:0 0 8px}
+  .ej-info h2{font-size:30px}
+  .ej-i{width:22px;height:22px;font-size:12px}
+  .ej-serie{font-size:15px;margin-top:4px}
+  .ej-que{margin:10px 0 0;font-size:15px;max-width:none}
+  .ej-big{font-size:96px;margin-top:12px}
+  .ej-carga{justify-content:flex-start;margin-top:16px;flex-wrap:wrap}
+  .ej-step button{width:40px;height:40px;font-size:20px}
+  .ej-step span{min-width:72px}.ej-step b{font-size:17px}.ej-step small{font-size:11px}
+  .ej-ctl{grid-column:2;grid-row:4;justify-content:flex-start;gap:16px;margin-top:28px}
+  .ej-ctl .c-btn{width:52px;height:52px}
+  .ej-ctl .c-btn svg{width:22px;height:22px}
+  .ej-ok{width:140px;height:64px}
+  /* descanso: cuenta a la izquierda, lo que sigue a la derecha */
+  .ej-rest{grid-column:1;grid-row:3/5}
+  .ej-rest .lbl{font-size:15px}
+  .ej-rest .t{font-size:140px}
+  .ej-rest .gb{height:48px;padding:0 24px;font-size:15px}
+  .ej-sig{grid-column:2;grid-row:3/5;align-self:center;grid-template-columns:1fr;padding:12px;gap:4px}
+  .ej-sig .ej-foto{width:100%;height:auto;aspect-ratio:1;border-radius:18px}
+  .ej-sig p{padding:10px 6px 6px}
+  .ej-sig small{font-size:13px}.ej-sig b{font-size:19px}.ej-sig em{font-size:19px}
+  /* al terminar: una columna centrada */
+  #ej.final{display:flex;padding:40px max(24px,calc(50% - 300px))}
+  #ej.final .ej-ctl{justify-content:center}
+  .ej-fin h1{font-size:30px}
+  .ej-fin .h{font-size:14px}
+  .ej-fin .ej-stats b{font-size:20px}.ej-fin .ej-stats span{font-size:13px}
+  .ej-aviso,.ej-cargas div{font-size:14px}
+}
+@media (min-width:820px) and (max-height:760px){
+  .ej-big{font-size:72px}
+  .ej-rest .t{font-size:110px}
+  .ej-sig{align-self:start;margin-top:24px}
+  .ej-sig .ej-foto{max-height:46vh;width:auto;margin:0 auto}
 }
 @media (hover:hover) and (pointer:fine){
   .ej-rut-a:hover{background:var(--field)}
   .ej-ok:hover,.ej-pie .btn:hover{filter:brightness(1.08)}
 }
-@media (max-height:700px){
+@media (max-width:819px) and (max-height:700px){
   .ej-big{font-size:2.6rem}
   .ej-rest .t{font-size:4rem}
   .ej-sig{grid-template-columns:72px minmax(0,1fr)}

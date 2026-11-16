@@ -2,3 +2,4 @@
 .clasp.json.bak
 node_modules/
 .clasp.json
+backend/Migracion.gs

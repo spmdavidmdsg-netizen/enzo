@@ -28,7 +28,7 @@
   .correos h2{font-size:17px;font-weight:700;margin-bottom:4px}
   .correos>p{color:var(--ink2);margin-bottom:22px}
   .buzon{display:flex;flex-wrap:wrap;gap:28px;justify-content:center;align-items:flex-start}
-  .mail{width:min(600px,100%);align-items:stretch;gap:0;border-radius:14px;border:1px solid var(--line);overflow:hidden;background:#fff}
+  .mail{width:min(600px,100%);align-items:stretch;gap:0;border-radius:14px;border:1px solid var(--line);overflow:hidden;background:#f2f4f7}
   .mail-cab{background:#f4f4f6;color:#1d1d1f;padding:12px 16px;border-bottom:1px solid #e3e3e8;font-size:12.5px;line-height:1.6}
   .mail-cab b{font-weight:600}
   .mail-cab .tag{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;font-size:11px;font-weight:700;background:#ffe9b3;color:#6b4a00}
@@ -58,13 +58,13 @@
   <p>Con tus registros reales del pizarrón. Para actualizarlos: <code>python3 dev/correos.py</code></p>
   <div class="buzon">
     <figure class="mail">
-      <div class="mail-cab"><b>Asunto:</b> <span id="as-mensual">Seguimiento del mes</span><span class="tag hoy">Activo</span><br>
-        <b>Cuándo:</b> el día 1 de cada mes, desde tu Mac · <b>Para:</b> tu correo de reportes</div>
+      <div class="mail-cab"><b>Asunto:</b> <span id="as-mensual">Seguimiento del mes</span><span class="tag">Nuevo diseño</span><br>
+        <b>Cuándo:</b> el día 1 de cada mes (hoy tu Mac aún lo envía con el diseño anterior) · <b>Para:</b> tu correo de reportes</div>
       <iframe src="correos/mensual.html" title="Correo mensual" data-correo></iframe>
     </figure>
     <figure class="mail">
-      <div class="mail-cab"><b>Asunto:</b> <span id="as-semanal">Tu semana</span><span class="tag">Propuesta</span><br>
-        <b>Cuándo:</b> propuesta, domingo 8:00 p. m. · <b>Para:</b> tu correo de reportes</div>
+      <div class="mail-cab"><b>Asunto:</b> <span id="as-semanal">Tu semana</span><span class="tag">Nuevo</span><br>
+        <b>Cuándo:</b> cada domingo, 8:00 p. m. · <b>Para:</b> tu correo de reportes</div>
       <iframe src="correos/semanal.html" title="Correo semanal (propuesta)" data-correo></iframe>
     </figure>
   </div>

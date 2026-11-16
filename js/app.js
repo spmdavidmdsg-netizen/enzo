@@ -304,7 +304,11 @@ $('#lupa').addEventListener('click', abrirBuscador);
 
 /* ---------- teclado ---------- */
 document.addEventListener('keydown', e => {
-  if (document.body.classList.contains('jugando')) return;   // el reproductor de Ejercicio maneja su teclado
+  /* Con una rutina en curso, el reproductor maneja su teclado; solo la C (tema) sigue funcionando */
+  if (document.body.classList.contains('jugando')) {
+    if (e.key.toLowerCase() === 'c' && !e.metaKey && !e.ctrlKey && !e.altKey && !escribiendo(e.target)) { e.preventDefault(); alternarTema(); }
+    return;
+  }
   if (ui.bienvenida) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); entrar(); } return; }
   if (e.key === 'Escape') {
     if (hojaAbierta()) cerrarHoja();

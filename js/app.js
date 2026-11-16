@@ -345,7 +345,8 @@ const sonda = Object.assign(document.createElement('i'), { ariaHidden: 'true' })
 sonda.style.cssText = 'position:fixed;top:0;bottom:0;left:0;width:0;visibility:hidden;pointer-events:none';
 document.body.append(sonda);
 function ajustarAltura() {
-  const instalada = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
+  /* Solo en pantallas táctiles: en la Mac la ventana puede ser más chica que la pantalla y eso no es un hueco */
+  const instalada = (navigator.standalone || matchMedia('(display-mode: standalone)').matches) && matchMedia('(pointer:coarse)').matches;
   const vertical = innerHeight >= innerWidth;
   const alto = vertical ? Math.max(screen.height, screen.width) : Math.min(screen.height, screen.width);   // alto real de la pantalla
   const h = instalada ? Math.round(alto - sonda.getBoundingClientRect().height) : 0;   // lo que le falta al área de lo fijo

@@ -4,3 +4,4 @@ node_modules/
 .clasp.json
 backend/Migracion.gs
 dev/correos/
+backend/Privado.gs

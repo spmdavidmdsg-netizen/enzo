@@ -740,7 +740,7 @@ button.c-day:active{transform:scale(.94);transition-duration:120ms}
   .ej-head .c-btn{width:44px;height:44px}
   .ej-head .c-btn svg{width:20px;height:20px}
   .ej-meta{font-size:13px}.ej-meta b{font-size:15px}
-  .ej-escena{grid-column:1;grid-row:3/5;margin:24px 0 0}
+  .ej-escena{grid-column:1;grid-row:3/5;margin:24px 0 0;display:flex;align-items:flex-end;justify-content:center;overflow:hidden}   /* la imagen termina a la misma altura que los botones */
   .ej-escena .ej-foto{border-radius:28px}
   .ej-escena .ej-foto.vacia{width:min(100%,60vh);font-size:3rem}
   .ej-info{grid-column:2;grid-row:3;align-self:end;text-align:left;padding:0 0 8px}

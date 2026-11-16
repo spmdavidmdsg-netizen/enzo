@@ -304,6 +304,7 @@ $('#lupa').addEventListener('click', abrirBuscador);
 
 /* ---------- teclado ---------- */
 document.addEventListener('keydown', e => {
+  if (document.body.classList.contains('jugando')) return;   // el reproductor de Ejercicio maneja su teclado
   if (ui.bienvenida) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); entrar(); } return; }
   if (e.key === 'Escape') {
     if (hojaAbierta()) cerrarHoja();

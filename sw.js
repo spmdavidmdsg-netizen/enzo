@@ -2,17 +2,23 @@
    Estrategia: pide la versión nueva a la red, pero si tarda más de 2.5 s (o falla) abre la copia guardada.
    Lo que llegue de la red se guarda igual, para la siguiente vez que abras Enzo.
    Las llamadas a Apps Script no pasan por aquí: son de otro dominio. */
-const VERSION = 'enzo-v16';
+const VERSION = 'enzo-v17';
 const ESPERA_RED = 2500;
 const SHELL = [
   './', 'index.html', 'manifest.json', 'css/app.css',
   'js/app.js', 'js/config.js', 'js/util.js', 'js/store.js', 'js/api.js', 'js/tipos.js',
-  'js/pages/pendientes.js', 'js/pages/rutina.js', 'js/desplegable.js',
+  'js/pages/pendientes.js', 'js/pages/rutina.js', 'js/pages/ejercicio.js', 'js/ejercicios.js', 'js/desplegable.js',
   'icons/icon-192.png', 'icons/apple-touch-icon.png'
 ];
 
+/* Imágenes de los ejercicios (~16 KB cada una): se guardan para entrenar sin señal. Si alguna falla, la app instala igual. */
+const IMAGENES = ['abdominal-crunches', 'bar-dips', 'bicycle-crunches', 'butt-bridge', 'cobra-stretch', 'crossover-crunch', 'dumbbell-curl',
+  'hammer-curl', 'heel-touch', 'jump-rope', 'lateral-raise', 'leg-raises', 'lumbar-twist', 'mountain-climber', 'plank', 'pullup-overhand',
+  'pullup-underhand', 'push-ups', 'shoulder-press', 'side-bridges', 'side-plank', 'v-up'].map(k => `img/ej/${k}.webp`);
+
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL.map(u => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL.map(u => new Request(u, { cache: 'reload' })))
+    .then(() => Promise.all(IMAGENES.map(u => c.add(u).catch(() => {}))))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', e => {

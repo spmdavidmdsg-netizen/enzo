@@ -5,3 +5,4 @@ node_modules/
 backend/Migracion.gs
 dev/correos/
 backend/Privado.gs
+dev/kling/

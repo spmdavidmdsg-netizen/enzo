@@ -4,6 +4,7 @@
 import { esc, iso, hoy, desdeIso, cap, uid, DIAS, MESES, reduceMotion, pieHoja } from '../util.js';
 import { TIPOS, DIAS_SEMANA, PROTEGIDOS, filasDelDia, analizar, reloj, horas, listaTipos, cargarTipos } from '../tipos.js';
 import { desplegable } from '../desplegable.js';
+import * as ejercicio from './ejercicio.js';
 
 const VISTAS = [['rutina', 'Rutina'], ['resumen', 'Resumen'], ['ejercicio', 'Ejercicio']];
 const SEMANA = ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom'];
@@ -33,15 +34,16 @@ function pintarBarra() {
   if (!bar.childElementCount) bar.innerHTML = VISTAS.map(v => `<button data-vista="${v[0]}">${v[1]}</button>`).join('');
   bar.querySelectorAll('[data-vista]').forEach(b => b.setAttribute('aria-current', b.dataset.vista === ui.vista));
   bar.classList.toggle('min', ui.min);
-  bar.hidden = ui.editando;
+  bar.hidden = ui.editando || (ui.vista === 'ejercicio' && ejercicio.enDetalle());
 }
 
 export function render(ctx) {
   if (ui.editando) return `<div class="rutina">${editar(ctx)}</div>`;
   const cuerpo = ui.vista === 'rutina' ? dia(ctx)
     : ui.vista === 'resumen' ? resumen(ctx)
-    : `<h1 class="st">Ejercicio</h1><p class="empty st" style="--i:1">Aquí vivirán tus rutinas de ejercicio. La diseñamos con el video de tu app de referencia.</p>`;
-  return `<div class="rutina con-barra">${cuerpo}</div>`;
+    : ejercicio.vista(ctx);
+  const conBarra = !(ui.vista === 'ejercicio' && ejercicio.enDetalle());
+  return `<div class="rutina${conBarra ? ' con-barra' : ''}">${cuerpo}</div>`;
 }
 
 function etiquetaDia(f) {
@@ -272,6 +274,7 @@ export function montar(view, ctx) {
   const g = view.querySelector('.graph');
   if (g) { const h = g.querySelector('.cg.hoy'); g.scrollLeft = h ? h.offsetLeft - g.clientWidth / 2 : g.scrollWidth; }
   pintarBarra(); gel(); resorteModo(view); gelSemana(view);
+  if (ui.vista === 'ejercicio' && !ui.editando) ejercicio.montar(view, ctx);
   const bar = barraEl();
   if (bar) bar.onclick = e => {
     const v = e.target.closest('[data-vista]');

@@ -23,6 +23,18 @@
   .phone{width:410px;height:864px;border-radius:58px;padding:10px;background:#2a2b30;box-shadow:inset 0 0 0 2px #3a3b40;position:relative}
   .phone iframe{width:390px;height:844px;border:0;border-radius:48px;background:#000;display:block}
   .note{max-width:960px;margin:22px auto 0;color:var(--ink2);text-align:center}
+  /* correos */
+  .correos{max-width:1280px;margin:56px auto 0;padding-top:28px;border-top:1px solid var(--line)}
+  .correos h2{font-size:17px;font-weight:700;margin-bottom:4px}
+  .correos>p{color:var(--ink2);margin-bottom:22px}
+  .buzon{display:flex;flex-wrap:wrap;gap:28px;justify-content:center;align-items:flex-start}
+  .mail{width:min(600px,100%);align-items:stretch;gap:0;border-radius:14px;border:1px solid var(--line);overflow:hidden;background:#fff}
+  .mail-cab{background:#f4f4f6;color:#1d1d1f;padding:12px 16px;border-bottom:1px solid #e3e3e8;font-size:12.5px;line-height:1.6}
+  .mail-cab b{font-weight:600}
+  .mail-cab .tag{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;font-size:11px;font-weight:700;background:#ffe9b3;color:#6b4a00}
+  .mail-cab .tag.hoy{background:#d8f0dc;color:#1d5c2a}
+  .mail iframe{display:block;width:100%;height:700px;border:0;background:#fff}
+  .falta{color:var(--ink2);padding:30px;text-align:center}
   @media (max-width:470px){.phone{transform:scale(.82);transform-origin:top center;margin-bottom:-150px}}
 </style>
 </head>
@@ -41,6 +53,33 @@
 </div>
 <p class="note">Los dos marcos comparten los mismos datos. Si cambias algo en uno, presiona "Recargar ambos" para verlo en el otro. En el iPhone real se agregan los márgenes de la isla y la barra de inicio.</p>
 
+<section class="correos" aria-labelledby="t-correos">
+  <h2 id="t-correos">Correos</h2>
+  <p>Con tus registros reales del pizarrón. Para actualizarlos: <code>python3 dev/correos.py</code></p>
+  <div class="buzon">
+    <figure class="mail">
+      <div class="mail-cab"><b>Asunto:</b> <span id="as-mensual">Seguimiento del mes</span><span class="tag hoy">Activo</span><br>
+        <b>Cuándo:</b> el día 1 de cada mes, desde tu Mac · <b>Para:</b> tu correo de reportes</div>
+      <iframe src="correos/mensual.html" title="Correo mensual" data-correo></iframe>
+    </figure>
+    <figure class="mail">
+      <div class="mail-cab"><b>Asunto:</b> <span id="as-semanal">Tu semana</span><span class="tag">Propuesta</span><br>
+        <b>Cuándo:</b> propuesta, domingo 8:00 p. m. · <b>Para:</b> tu correo de reportes</div>
+      <iframe src="correos/semanal.html" title="Correo semanal (propuesta)" data-correo></iframe>
+    </figure>
+  </div>
+</section>
+
+<script>
+  /* Correos: asunto real y alto del marco según su contenido; aviso si aún no se generan */
+  fetch('correos/asuntos.json', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(a => {
+    if (!a) { document.querySelector('.buzon').innerHTML = '<p class="falta">Aún no hay vistas previas. Corre <code>python3 dev/correos.py</code> y recarga.</p>'; return; }
+    document.getElementById('as-mensual').textContent = a.mensual;
+    document.getElementById('as-semanal').textContent = a.semanal;
+  }).catch(() => {});
+  const altoCorreo = f => { try { f.style.height = f.contentDocument.body.scrollHeight + 'px'; } catch (e) {} };
+  document.querySelectorAll('[data-correo]').forEach(f => { f.addEventListener('load', () => altoCorreo(f)); altoCorreo(f); });
+</script>
 <script>
   if (location.hostname === '127.0.0.1') location.replace(location.href.replace('127.0.0.1', 'localhost'));
   const frames = () => [document.getElementById('f-mac'), document.getElementById('f-phone')];

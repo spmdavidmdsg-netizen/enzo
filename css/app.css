@@ -211,7 +211,8 @@ body:not([data-page="pendientes"]) :is(.fab,.lupa){display:none}
 /* ---------- barra de Rutina en píldora de vidrio (celular abajo, Mac arriba) ---------- */
 .rbar[hidden],body:not([data-page="rutina"]) .rbar{display:none}
 .rbar{position:fixed;left:50%;bottom:calc(var(--safe-b) + 14px - var(--hueco,0px));z-index:15;transform:translateX(-50%);display:flex;padding:5px;border-radius:999px}
-.rbar button{position:relative;z-index:1;max-width:160px;overflow:hidden;padding:11px 18px;border-radius:999px;font-size:var(--t-body);font-weight:600;color:var(--ink2);white-space:nowrap;transition:transform 420ms var(--spring),background-color 200ms ease,color 260ms ease,max-width 420ms var(--spring),padding 420ms var(--spring),opacity 260ms ease}
+/* Sin transición de fondo: la cápsula de selección es una capa aparte; si el fondo del botón se desvanece al terminar, destella */
+.rbar button{position:relative;z-index:1;max-width:160px;overflow:hidden;padding:11px 18px;border-radius:999px;font-size:var(--t-body);font-weight:600;color:var(--ink2);white-space:nowrap;transition:transform 420ms var(--spring),color 260ms ease,max-width 420ms var(--spring),padding 420ms var(--spring),opacity 260ms ease}
 .rbar button[aria-current="true"]{background:var(--fill);color:var(--on-fill)}
 .rbar.moviendo button[aria-current="true"]{background:transparent}
 .rsel{position:absolute;top:5px;bottom:5px;border-radius:999px;background:var(--fill);z-index:0;pointer-events:none}
@@ -501,7 +502,7 @@ button.c-day:active{transform:scale(.94);transition-duration:120ms}
 /* ---------- Editar rutina ---------- */
 .e-head{display:flex;align-items:center;gap:12px}
 .semana{position:relative;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px;margin-top:16px;padding:4px;border-radius:22px;background:var(--field);border:1px solid var(--line)}
-.semana button{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:1px;min-height:44px;padding:6px 0;border-radius:18px;color:var(--ink2);transition:background 200ms ease,color 200ms ease,transform 420ms var(--spring)}
+.semana button{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:1px;min-height:44px;padding:6px 0;border-radius:18px;color:var(--ink2);transition:color 200ms ease,transform 420ms var(--spring)}
 .semana button:active{transform:scale(.94);transition-duration:120ms}
 .semana b{font-size:var(--t-sec);font-weight:600}
 .semana small{font-size:var(--t-min);color:var(--ink3);white-space:nowrap}

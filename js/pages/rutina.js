@@ -65,8 +65,8 @@ function dia({ store }) {
     const rEj = a.tipo === 'ejercicio' ? rutinaEj(a.ejercicioId) : null;
     const boton = a.tipo === 'ejercicio' && esHoy ? botonEjercicio(a) : '';
     return `<li${boton ? ' class="con-ej"' : ''}><button class="bk act ${a.core ? 'core' : 'opt'}" data-reg="${esc(a.id)}" aria-pressed="${hechos.has(a.id)}" ${futuro ? 'disabled' : ''} style="--c:${t.color};--t:${t.tinta}">
-      <span class="bk-n">${esc(a.nombre)}${tol.length ? `<small>Tolerancia ${tol.join(', ')}</small>` : ''}${rEj ? `<small>${esc(rEj.nombre)}</small>` : ''}</span>
-      <time>${reloj(f.ini)}<br>${reloj(f.ini + f.m)}</time></button>${boton}</li>`;
+      <span class="bk-n">${esc(a.nombre)}${perf && tol.length ? `<small>Tolerancia ${tol.join(', ')}</small>` : ''}${rEj ? `<small>${esc(rEj.nombre)}</small>` : ''}</span>
+      ${perf ? `<time>${reloj(f.ini)}<br>${reloj(f.ini + f.m)}</time>` : ''}</button>${boton}</li>`;   /* Línea Crítica: solo los nombres, sin horas */
   }).join('');
   if (!html) return cab + '<p class="empty st" style="--i:2">Este día no tiene actividades en tu Línea Crítica. Márcalas en Editar rutina.</p>';
   return cab + `<ul class="blocks st" style="--i:2">${html}</ul>`;

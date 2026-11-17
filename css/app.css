@@ -394,8 +394,7 @@ kbd{font:inherit;font-size:var(--t-min);padding:1px 6px;border:1px solid var(--l
   .sw:active::after{width:32px}
   .sw[aria-checked="true"]::after{transform:translateX(6px)}
   .sw[aria-checked="true"]:active::after{transform:translateX(2px)}
-  /* El aviso con Deshacer va arriba, lejos del borde inferior */
-  #toast{top:32px;bottom:auto;transform:translate(-50%,-12px) scale(.96)}
+  #toast{bottom:32px}   /* Mac: abajo al centro, sin tapar el menú ni la barra de secciones */
   #sheet.spot{top:16%;left:50%;right:auto;width:min(640px,calc(100vw - 48px));transform:translate(-50%,-10px) scale(.98)}
   .sheet-open #sheet.spot{transform:translate(-50%,0)}
   .spot-bar{height:60px;padding:0 24px}

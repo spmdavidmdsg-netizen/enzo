@@ -368,12 +368,29 @@ function cerrarHoja() {
   } else s.classList.remove('morph');
   origen = null;
   document.body.classList.remove('sheet-open');
+  s.style.transform = '';
   fijarPagina(false);
   const fn = alCerrar; alCerrar = null; fn?.(s);
   render();
   foco?.isConnected && foco.focus?.({ preventScroll: true });
 }
 $('#scrim').addEventListener('click', cerrarHoja);
+/* iPhone: el teclado se pone encima de la hoja (la hoja no se mueve). Si tocas un campo que quedó debajo
+   del teclado, la hoja desplaza su contenido para mostrarlo; si no alcanza, sube solo lo necesario. */
+$('#sheet').addEventListener('focusin', e => {
+  const s = $('#sheet'), campo = e.target;
+  if (!tactil() || s.classList.contains('spot') || !campo.matches('input:not([type="date"]):not([type="time"]):not([type="color"]),textarea')) return;
+  setTimeout(() => {
+    const vv = window.visualViewport; if (!vv || document.activeElement !== campo) return;
+    const limite = vv.offsetTop + vv.height - 16;
+    let falta = campo.getBoundingClientRect().bottom - limite;
+    if (falta <= 0) return;
+    const sc = s.querySelector('.sh-scroll');
+    if (sc) { const antes = sc.scrollTop; sc.scrollTop += falta; falta -= sc.scrollTop - antes; }
+    if (falta > 0) s.style.transform = `translateY(${-Math.round(falta)}px)`;
+  }, 380);
+});
+$('#sheet').addEventListener('focusout', () => { setTimeout(() => { const s = $('#sheet'); if (!s.contains(document.activeElement)) s.style.transform = ''; }, 60); });
 
 /* ---------- buscador (Spotlight con categorías y filtros: js/buscador.js) ---------- */
 function abrirBuscador() {

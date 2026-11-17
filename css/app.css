@@ -914,7 +914,6 @@ button.c-day:active{transform:scale(.94);transition-duration:120ms}
 /* ---------- iPhone: hojas y barra de formato con el teclado abierto ---------- */
 body.fijo{position:fixed;left:0;right:0;overflow:hidden}
 @media (max-width:819px){
-  .con-teclado #sheet:not(.spot){bottom:calc(var(--teclado) + 8px);max-height:calc(var(--vv-h) - 16px)}
   .con-teclado .n-bar{bottom:var(--teclado);padding-bottom:8px}
   .con-teclado .n-estilos{bottom:calc(var(--teclado) + 62px)}
 }

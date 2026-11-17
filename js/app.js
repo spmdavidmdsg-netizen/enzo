@@ -350,7 +350,11 @@ function abrirHoja(html, { montar, cerrar, clase = '', desde = null } = {}) {
   }
   alCerrar = cerrar || null;
   montar?.(s);
-  requestAnimationFrame(() => (s.querySelector('[autofocus]') || s).focus({ preventScroll: true }));
+  /* El buscador pone el cursor en el mismo toque: así el iPhone abre el teclado de inmediato
+     (si se hace un instante después, iOS ya no lo abre). Las demás hojas lo ponen al aparecer. */
+  const af = s.querySelector('[autofocus]');
+  if (clase === 'spot' && af) af.focus({ preventScroll: true });
+  else requestAnimationFrame(() => (af || s).focus({ preventScroll: true }));
 }
 function cerrarHoja() {
   if (!hojaAbierta()) return;

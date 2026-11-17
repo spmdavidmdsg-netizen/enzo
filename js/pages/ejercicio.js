@@ -1,13 +1,13 @@
-/* Ejercicio: tus rutinas, el detalle de cada una y el reproductor del circuito.
-   El reproductor es una capa a pantalla completa fuera de #view, así las sincronizaciones no lo redibujan.
+/* Ejercicio: el reproductor del circuito. Se abre con el botón Empezar de la actividad de ejercicio del día.
+   Es una capa a pantalla completa fuera de #view, así las sincronizaciones no lo redibujan.
    La sesión en curso se guarda en este dispositivo: si sales o se cierra la app, la retomas donde ibas.
    Al terminar se guarda en Sesiones y se marca la actividad de ejercicio del día. */
-import { esc, iso, hoy, desdeIso, uid, DIAS, MESES, cap, reduceMotion } from '../util.js';
+import { esc, iso, hoy, uid, DIAS, MESES, cap, reduceMotion } from '../util.js';
 import { DIAS_SEMANA, aMin } from '../tipos.js';
-import { RUTINAS, rutina, pasos, estimado, ejerciciosDe, imgDe, cantidad, mmss } from '../ejercicios.js';
+import { rutina, pasos, imgDe, cantidad, mmss } from '../ejercicios.js';
+import { desplegable } from '../desplegable.js';
 
 const K = 'enzo-ej-activa';
-const ui = { detalle: null };
 let act = leerAct(), ctxG = null, tk = null, candado = null;
 
 function leerAct() { try { const a = JSON.parse(localStorage.getItem(K) || 'null'); return a && rutina(a.rid) ? a : null; } catch (e) { return null; } }
@@ -28,84 +28,15 @@ const foto = (x, cls = '') => x.img
   ? `<img class="ej-foto${x.espejo ? ' espejo' : ''} ${cls}" src="${imgDe(x.img)}" alt="" loading="lazy" decoding="async">`
   : `<span class="ej-foto vacia ${cls}" aria-hidden="true">${esc(x.n.split(' ').map(w => w[0]).slice(0, 2).join(''))}</span>`;
 
-/* ---------- lista y detalle (dentro de Rutina › Ejercicio) ---------- */
-export const enDetalle = () => !!ui.detalle;
-
-function haceCuanto(f) {
-  const n = Math.round((hoy() - desdeIso(f)) / 864e5);
-  if (n <= 0) return 'hoy';
-  if (n === 1) return 'ayer';
-  if (n < 7) return DIAS[desdeIso(f).getDay()];
-  const d = desdeIso(f); return `${d.getDate()} de ${MESES[d.getMonth()]}`;
-}
 const ultima = (s, id) => s.sesiones.filter(x => x.ejercicioId === id).sort((a, b) => (b.fecha + (b.datos?.fin || '')).localeCompare(a.fecha + (a.datos?.fin || '')))[0];
 
-export function vista(ctx) {
-  ctxG = ctx;
-  const r = ui.detalle && rutina(ui.detalle);
-  if (r) return detalle(r);
-  ui.detalle = null;
-  const s = ctx.store.state;
-  const enCurso = act && rutina(act.rid);
-  const curso = enCurso ? (() => {
-    const ps = pasos(enCurso), hechos = ps.slice(0, act.i).filter(p => p.t === 'ej').length, total = ps.filter(p => p.t === 'ej').length;
-    return `<article class="card ej-curso st" style="--i:1"><div><span class="h">En curso</span><b>${esc(enCurso.nombre)}</b><small>${hechos} de ${total} ejercicios · ${mmss(activo() / 1000)}</small></div>
-      <div class="ej-curso-b"><button class="btn sm q" data-ej-descartar>Descartar</button><button class="btn sm p" data-ej-continuar>Continuar</button></div></article>`;
-  })() : '';
-  const tarjetas = RUTINAS.map((r, i) => {
-    const u = ultima(s, r.id), nv = ejerciciosDe(r);
-    return `<article class="card ej-rut st" style="--i:${i + 2}">
-      <button class="ej-rut-a" data-ej-abrir="${r.id}" aria-label="Ver ${esc(r.nombre)}"></button>
-      <div class="ej-rut-t"><b>${esc(r.nombre)}</b><span class="sub">${esc(r.sub)}</span>
-        <div class="chips"><span class="chip">${nv} ejercicios</span><span class="chip">~${estimado(r)} min</span></div>
-        <p class="meta">${u ? 'Última vez: ' + haceCuanto(u.fecha) : 'Aún sin hacer'}</p>
-        <button class="btn sm p" data-ej-empezar="${r.id}">Empezar</button></div>
-      ${r.img ? `<img class="ej-rut-img" src="${imgDe(r.img)}" alt="" loading="lazy" decoding="async">` : '<span class="ej-rut-img vacia">Sin imagen</span>'}
-    </article>`;
-  }).join('');
-  /* Esta semana: de lunes a hoy */
-  const h = hoy(), lunes = new Date(h); lunes.setDate(h.getDate() - (h.getDay() + 6) % 7);
-  const sem = s.sesiones.filter(x => x.fecha >= iso(lunes) && x.fecha <= iso(h));
-  const min = Math.round(sem.reduce((t, x) => t + (Number(x.datos?.dur) || 0), 0) / 60);
-  const reps = sem.reduce((t, x) => t + (Number(x.datos?.reps) || 0), 0);
-  const tiempo = min >= 60 ? `${Math.floor(min / 60)} h ${String(min % 60).padStart(2, '0')}` : `${min} min`;
-  return `<h1 class="st">Ejercicio</h1>${curso}${tarjetas}
-    <section class="sec st" style="--i:${RUTINAS.length + 2}"><span class="h">Esta semana</span>
-      <div class="ej-stats"><div class="card"><b>${sem.length}</b><span>${sem.length === 1 ? 'sesión' : 'sesiones'}</span></div><div class="card"><b>${tiempo}</b><span>entrenando</span></div><div class="card"><b>${reps}</b><span>repeticiones</span></div></div></section>`;
-}
-
-function detalle(r) {
-  const bloques = r.bloques.map((b, i) => {
-    const cab = b.vueltas > 1 ? `${b.titulo} × ${b.vueltas} vueltas · ${b.desc} s entre ejercicios · ${b.descVuelta} s entre vueltas`
-      : b.desc ? `${b.titulo} · de corrido · ${b.desc} s entre ejercicios` : b.titulo;
-    return `<section class="sec st" style="--i:${i + 2}"><span class="h">${esc(cab)}</span>
-      <ol class="card ej-lista">${b.ejercicios.map(x => `<li>${foto(x)}<div><b>${esc(x.n)}</b><small>${esc(x.m)}</small></div><em>${cantidad(x)}</em></li>`).join('')}</ol></section>`;
-  }).join('');
-  const total = r.bloques.reduce((n, b) => n + b.ejercicios.length * (b.vueltas || 1), 0);
-  return `<div class="e-head st"><button class="c-btn glass" data-ej-volver aria-label="Volver a tus rutinas" title="Volver">${I.atras}</button><h1>${esc(r.nombre)}</h1></div>
-    <div class="ej-stats st" style="--i:1"><div class="card"><b>${ejerciciosDe(r)}</b><span>ejercicios</span></div><div class="card"><b>${total}</b><span>series</span></div><div class="card"><b>${estimado(r)} min</b><span>aprox.</span></div></div>
-    ${bloques}
-    <div class="ej-pie"><button class="btn p" data-ej-empezar="${r.id}">Empezar rutina</button></div>`;
-}
-
-export function montar(view, ctx) {
-  ctxG = ctx;
-  view.addEventListener('click', e => {
-    const ab = e.target.closest('[data-ej-abrir]');
-    if (ab) { ui.detalle = ab.dataset.ejAbrir; ctx.render(); window.scrollTo(0, 0); return; }
-    if (e.target.closest('[data-ej-volver]')) { ui.detalle = null; ctx.render(); window.scrollTo(0, 0); return; }
-    const em = e.target.closest('[data-ej-empezar]');
-    if (em) { empezar(em.dataset.ejEmpezar); return; }
-    if (e.target.closest('[data-ej-continuar]')) { abrirJugador(); return; }
-    if (e.target.closest('[data-ej-descartar]')) {
-      if (!confirm('¿Descartar la rutina en curso? No se guarda lo que llevas.')) return;
-      act = null; guardarAct(); ctx.render();
-    }
-  });
-}
+/* Id de la rutina en curso (o null). Si la app se cerró a media rutina, sigue guardada en este dispositivo. */
+export const enCurso = () => act ? act.rid : null;
+export function continuar(ctx) { ctxG = ctx; if (act) abrirJugador(); }
 
 /* ---------- reproductor ---------- */
-function empezar(id) {
+export function empezar(ctx, id) {
+  ctxG = ctx;
   const r = rutina(id); if (!r) return;
   if (act && !confirm(act.rid === id ? 'Ya tienes esta rutina en curso. ¿Empezarla de nuevo?' : `Tienes ${rutina(act.rid).nombre} en curso. ¿Descartarla y empezar ${r.nombre}?`)) {
     if (act.rid === id) abrirJugador();
@@ -206,7 +137,7 @@ function pintar(entrada = false) {
   const ejs = ps.map((q, i) => q.t === 'ej' ? i : -1).filter(i => i >= 0);
   const n = ejs.filter(i => i < act.i).length;   // ejercicios antes de este paso
   const barra = `<div class="ej-prog" aria-hidden="true">${ejs.map(i => `<i class="${i < act.i ? 'ok' : i === act.i ? 'va' : ''}"></i>`).join('')}</div>`;
-  const cab = (titulo) => `<div class="ej-head"><button class="c-btn glass" data-x aria-label="Salir; tu avance se guarda" title="Salir">${I.x}</button><div class="ej-meta"><b>${titulo}</b><span data-reloj>${mmss(activo() / 1000)}</span></div></div>`;
+  const cab = (titulo) => `<div class="ej-head"><button class="c-btn glass" data-x aria-label="Salir, terminar o descartar" title="Salir" aria-haspopup="listbox" aria-expanded="false">${I.x}</button><div class="ej-meta"><b>${titulo}</b><span data-reloj>${mmss(activo() / 1000)}</span></div></div>`;
   el.className = (p.t === 'desc' ? 'descanso' : '') + (entrada && !reduceMotion() ? ' entra' : '');
   if (p.t === 'desc') {
     const sig = ps.slice(act.i + 1).find(q => q.t === 'ej');
@@ -243,7 +174,19 @@ function clic(e) {
   if (b.dataset.fin !== undefined) { act = null; guardarAct(); cerrarJugador(); return; }
   if (!act) return;
   const ps = listaPasos(), p = ps[act.i];
-  if (b.dataset.x !== undefined) { cerrarJugador(); return; }
+  if (b.dataset.x !== undefined) {
+    const hechos = Object.values(act.log).filter(l => l.hecho).length;
+    desplegable(b, [
+      { v: 'salir', html: 'Salir<small>tu avance se guarda</small>' },
+      ...(hechos ? [{ v: 'terminar', html: 'Terminar aquí<small>guarda lo que llevas</small>' }] : []),
+      { v: 'descartar', sep: true, html: '<span class="rojo">Descartar rutina</span>' }
+    ], v => {
+      if (v === 'salir') cerrarJugador();
+      if (v === 'terminar') terminar();
+      if (v === 'descartar' && confirm('¿Descartar la rutina? No se guarda lo que llevas.')) { act = null; guardarAct(); cerrarJugador(); }
+    });
+    return;
+  }
   if (b.dataset.info !== undefined) {
     const q = b.closest('.ej-info').querySelector('.ej-que'), abre = q.hidden;
     q.hidden = !abre; b.setAttribute('aria-expanded', abre); return;
@@ -286,7 +229,7 @@ document.addEventListener('pointerdown', e => {
 document.addEventListener('keydown', e => {
   if (!document.body.classList.contains('jugando')) return;
   const el = document.getElementById('ej');
-  if (e.key === 'Escape') { e.preventDefault(); el.querySelector('[data-x],[data-fin]')?.click(); }
+  if (e.key === 'Escape') { if (document.querySelector('.dd')) return; e.preventDefault(); if (el.querySelector('[data-fin]')) el.querySelector('[data-fin]').click(); else cerrarJugador(); }
   if (e.key === 'Enter' || e.key === ' ') {
     if (e.target.closest?.('button') && e.target.closest('#ej')) return;   // el botón con foco ya responde
     e.preventDefault(); el.querySelector('[data-ok],[data-play],[data-saltar],[data-fin]')?.click();
@@ -341,5 +284,3 @@ function terminar() {
   act = null; guardarAct();
 }
 
-/* Si la app se cerró a media rutina, la sesión sigue guardada y aparece como "En curso". */
-export const enCurso = () => !!act;

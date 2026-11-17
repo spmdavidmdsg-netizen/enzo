@@ -1,23 +1,21 @@
-/* Rutina: tres vistas en la barra de píldora (Rutina, Resumen, Ejercicio) y la subpágina Editar rutina.
+/* Rutina (Today › Rutina) y Resumen (Control › Resumen), más la subpágina Editar rutina.
    Rutina muestra el día: cada actividad es un botón; hecha = botón pulsado.
+   Las actividades de ejercicio de hoy tienen un botón Empezar que abre su rutina de ejercicio.
    Editar rutina arma la semana tipo: actividades por día, huecos libres, empalmes y horas útiles. */
 import { esc, iso, hoy, desdeIso, cap, uid, DIAS, MESES, reduceMotion, pieHoja } from '../util.js';
 import { TIPOS, DIAS_SEMANA, PROTEGIDOS, filasDelDia, analizar, reloj, horas, listaTipos, cargarTipos } from '../tipos.js';
 import { desplegable } from '../desplegable.js';
 import * as ejercicio from './ejercicio.js';
+import { RUTINAS, rutina as rutinaEj } from '../ejercicios.js';
 
-const VISTAS = [['rutina', 'Rutina'], ['resumen', 'Resumen'], ['ejercicio', 'Ejercicio']];
 const SEMANA = ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom'];
 const ui = {
-  vista: leer('enzo-rutina-vista', 'rutina'),
   modo: leer('enzo-rutina-modo', 'performance'),
   fecha: iso(hoy()),
   mes: (() => { const d = hoy(); return new Date(d.getFullYear(), d.getMonth(), 1); })(),
   cambioModo: false,
   editando: false,     // subpágina Editar rutina
   diaEdit: DIAS_SEMANA[hoy().getDay()],
-  min: false,          // barra encogida al desplazar (iPhone)
-  selDesde: null,      // posición previa de la selección, para el efecto de gel
   semDesde: null,      // lo mismo para el selector de día de Editar rutina
   anchoModo: 0         // ancho previo del botón de vista, para el resorte
 };
@@ -26,25 +24,15 @@ function leer(k, d) { try { return localStorage.getItem(k) || d; } catch (e) { r
 function fijar(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
 const nombreDia = k => DIAS[DIAS_SEMANA.indexOf(k)];
 
-/* La barra Rutina · Resumen · Ejercicio es un solo elemento que nunca se reconstruye
-   (en el iPhone, rehacer el vidrio en cada cambio produce un parpadeo). */
-const barraEl = () => document.getElementById('rbar');
-function pintarBarra() {
-  const bar = barraEl(); if (!bar) return;
-  if (!bar.childElementCount) bar.innerHTML = VISTAS.map(v => `<button data-vista="${v[0]}">${v[1]}</button>`).join('');
-  bar.querySelectorAll('[data-vista]').forEach(b => b.setAttribute('aria-current', b.dataset.vista === ui.vista));
-  bar.classList.toggle('min', ui.min);
-  bar.hidden = ui.editando || (ui.vista === 'ejercicio' && ejercicio.enDetalle());
+/* vista: 'rutina' (el día y Editar rutina) o 'resumen' (el mes). */
+export function render(ctx, vista) {
+  if (vista === 'resumen') return `<div class="rutina">${resumen(ctx)}</div>`;
+  return `<div class="rutina">${ui.editando ? editar(ctx) : dia(ctx)}</div>`;
 }
-
-export function render(ctx) {
-  if (ui.editando) return `<div class="rutina">${editar(ctx)}</div>`;
-  const cuerpo = ui.vista === 'rutina' ? dia(ctx)
-    : ui.vista === 'resumen' ? resumen(ctx)
-    : ejercicio.vista(ctx);
-  const conBarra = !(ui.vista === 'ejercicio' && ejercicio.enDetalle());
-  return `<div class="rutina${conBarra ? ' con-barra' : ''}">${cuerpo}</div>`;
-}
+/* En Editar rutina la barra de secciones se esconde. */
+export const ocultaBarra = vista => vista === 'rutina' && ui.editando;
+/* Desde el calendario del Resumen: ir a la rutina de ese día. */
+export function verDia(f) { ui.fecha = f; ui.editando = false; }
 
 function etiquetaDia(f) {
   const d = desdeIso(f), n = Math.round((d - hoy()) / 864e5);
@@ -59,7 +47,7 @@ function dia({ store }) {
   const d = desdeIso(ui.fecha), clave = DIAS_SEMANA[d.getDay()];
   const lista = store.state.actividades.filter(a => a.dia === clave);
   const hechos = new Set(store.state.registros.filter(r => r.fecha === ui.fecha && r.hecho).map(r => r.actividadId));
-  const futuro = ui.fecha > iso(hoy());
+  const futuro = ui.fecha > iso(hoy()), esHoy = ui.fecha === iso(hoy());
   const perf = ui.modo !== 'critica', etiquetaModo = perf ? 'Performance' : 'Línea Crítica';
   const animar = ui.cambioModo; ui.cambioModo = false;
   const cab = `<div class="r-head st"><h1>${etiquetaDia(ui.fecha)}</h1><button class="btn sm glass" data-editar>Editar rutina</button></div>
@@ -74,12 +62,21 @@ function dia({ store }) {
     if (f.k === 'tray') return `<li class="bk tray"><span class="bk-n">${f.nombre}</span><time>${horas(f.m)}</time></li>`;
     const a = f.a, t = TIPOS[a.tipo] || TIPOS.tarea, tol = [];
     if (Number(a.tolA)) tol.push(`${a.tolA} min antes`); if (Number(a.tolD)) tol.push(`${a.tolD} min después`);
-    return `<li><button class="bk act ${a.core ? 'core' : 'opt'}" data-reg="${esc(a.id)}" aria-pressed="${hechos.has(a.id)}" ${futuro ? 'disabled' : ''} style="--c:${t.color};--t:${t.tinta}">
-      <span class="bk-n">${a.core ? '' : '<i class="dot" aria-hidden="true"></i>'}${esc(a.nombre)}${tol.length ? `<small>Tolerancia ${tol.join(', ')}</small>` : ''}${a.tipo === 'ejercicio' ? '<small>Ejercicio · ver rutina</small>' : ''}</span>
-      <time>${reloj(f.ini)}<br>${reloj(f.ini + f.m)}</time></button></li>`;
+    const rEj = a.tipo === 'ejercicio' ? rutinaEj(a.ejercicioId) : null;
+    const boton = a.tipo === 'ejercicio' && esHoy ? botonEjercicio(a) : '';
+    return `<li${boton ? ' class="con-ej"' : ''}><button class="bk act ${a.core ? 'core' : 'opt'}" data-reg="${esc(a.id)}" aria-pressed="${hechos.has(a.id)}" ${futuro ? 'disabled' : ''} style="--c:${t.color};--t:${t.tinta}">
+      <span class="bk-n">${a.core ? '' : '<i class="dot" aria-hidden="true"></i>'}${esc(a.nombre)}${tol.length ? `<small>Tolerancia ${tol.join(', ')}</small>` : ''}${rEj ? `<small>${esc(rEj.nombre)}</small>` : ''}</span>
+      <time>${reloj(f.ini)}<br>${reloj(f.ini + f.m)}</time></button>${boton}</li>`;
   }).join('');
   if (!html) return cab + '<p class="empty st" style="--i:2">Este día no tiene actividades imprescindibles. Márcalas en Editar rutina.</p>';
   return cab + `<ul class="blocks st" style="--i:2">${html}</ul>`;
+}
+
+/* Empezar (o Continuar) la rutina de ejercicio ligada a la actividad. */
+const PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>';
+function botonEjercicio(a) {
+  const curso = ejercicio.enCurso(), sigue = curso && (!a.ejercicioId || curso === a.ejercicioId);
+  return `<button class="ej-go" data-ej-go="${esc(a.id)}">${PLAY}${sigue ? 'Continuar' : 'Empezar'}</button>`;
 }
 
 /* ---------- Editar rutina: semana tipo ---------- */
@@ -139,6 +136,7 @@ function abrirActividad(ctx, id, base = {}) {
   ctx.abrirHoja(`<form id="f-act" novalidate>
       <input class="sh-title" name="nombre" value="${esc(a.nombre)}" placeholder="Nombre de la actividad" autocomplete="off" ${previo ? '' : 'autofocus'} aria-label="Actividad">
       <div class="field"><span class="lbl" id="a-tipo-l">Tipo</span><button type="button" class="t-sel" id="a-tipo" data-valor="${esc(TIPOS[a.tipo] ? a.tipo : 'tarea')}" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="a-tipo-l a-tipo"></button></div>
+      <div class="field" id="a-ejf" ${a.tipo === 'ejercicio' ? '' : 'hidden'}><span class="lbl" id="a-ej-l">Rutina de ejercicio</span><button type="button" class="t-sel" id="a-ej" data-valor="${esc(a.ejercicioId || '')}" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="a-ej-l a-ej"></button></div>
       <div class="cols">
         <div class="field"><label for="a-inicio">Hora de inicio</label><input class="inp" id="a-inicio" name="inicio" type="time" value="${esc(a.inicio)}"></div>
         ${num('dur', 'Duración, min', a.dur, 'min="5"')}
@@ -163,10 +161,18 @@ function abrirActividad(ctx, id, base = {}) {
         ...listaTipos().map(t => ({ v: t.k, actual: t.k === sel.dataset.valor, html: `<i class="dot" style="background:${t.color}"></i>${esc(t.l)}` })),
         { v: '__editar', sep: true, html: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10.5 2.5l3 3L6 13H3v-3z"/></svg>Editar tipos…' }
       ], v => {
-        if (v !== '__editar') { sel.dataset.valor = v; pintarSel(); return; }
+        if (v !== '__editar') { sel.dataset.valor = v; pintarSel(); s.querySelector('#a-ejf').hidden = v !== 'ejercicio'; return; }
         editorTipos(ctx, s, () => { f.hidden = false; s.querySelector('#t-editor').hidden = true; pintarSel(); sel.focus(); });
         f.hidden = true;
       });
+      /* Rutina de ejercicio que abre el botón Empezar de esta actividad */
+      const ej = s.querySelector('#a-ej');
+      const pintarEj = () => {
+        const r = rutinaEj(ej.dataset.valor);
+        ej.innerHTML = `<span>${r ? esc(r.nombre) : 'Elegir al empezar'}</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg>`;
+      };
+      pintarEj();
+      ej.onclick = () => desplegable(ej, [{ v: '', actual: !ej.dataset.valor, html: 'Elegir al empezar' }, ...RUTINAS.map(r => ({ v: r.id, actual: r.id === ej.dataset.valor, html: esc(r.nombre) }))], v => { ej.dataset.valor = v; pintarEj(); });
       const sw = b => b.setAttribute('aria-checked', b.getAttribute('aria-checked') !== 'true');
       s.querySelector('#a-core').onclick = e => sw(e.currentTarget);
       s.querySelector('#a-tray').onclick = e => { sw(e.currentTarget); s.querySelector('#a-trayf').hidden = e.currentTarget.getAttribute('aria-checked') !== 'true'; };
@@ -183,7 +189,8 @@ function abrirActividad(ctx, id, base = {}) {
           tipo: TIPOS[sel.dataset.valor] ? sel.dataset.valor : 'tarea',
           dur: Math.max(5, n('dur')), tolA: n('tolA'), tolD: n('tolD'),
           ida: conTray ? n('ida') : 0, vuelta: conTray ? n('vuelta') : 0,
-          core: s.querySelector('#a-core').getAttribute('aria-checked') === 'true'
+          core: s.querySelector('#a-core').getAttribute('aria-checked') === 'true',
+          ejercicioId: sel.dataset.valor === 'ejercicio' ? ej.dataset.valor : ''
         };
       };
     },
@@ -191,7 +198,7 @@ function abrirActividad(ctx, id, base = {}) {
       if (a.__borrado || !s.__leer) return;
       const n = s.__leer();
       if (!n.nombre) { if (previo) ctx.toast('La actividad necesita un nombre; se conservó la anterior.'); return; }
-      const clave = x => JSON.stringify(['nombre', 'inicio', 'dur', 'tipo', 'tolA', 'tolD', 'ida', 'vuelta', 'core'].map(k => k === 'core' ? !!x[k] : String(x[k] ?? '')));
+      const clave = x => JSON.stringify(['nombre', 'inicio', 'dur', 'tipo', 'tolA', 'tolD', 'ida', 'vuelta', 'core', 'ejercicioId'].map(k => k === 'core' ? !!x[k] : String(x[k] ?? '')));
       if (!previo || clave(n) !== clave(previo)) ctx.store.guardar('actividades', n);
     }
   });
@@ -273,17 +280,17 @@ function copiarDia(ctx, desde) {
 export function montar(view, ctx) {
   const g = view.querySelector('.graph');
   if (g) { const h = g.querySelector('.cg.hoy'); g.scrollLeft = h ? h.offsetLeft - g.clientWidth / 2 : g.scrollWidth; }
-  pintarBarra(); gel(); resorteModo(view); gelSemana(view);
-  if (ui.vista === 'ejercicio' && !ui.editando) ejercicio.montar(view, ctx);
-  const bar = barraEl();
-  if (bar) bar.onclick = e => {
-    const v = e.target.closest('[data-vista]');
-    if (!v || v.dataset.vista === ui.vista) return;
-    const actual = bar.querySelector('[aria-current="true"]');
-    ui.selDesde = actual ? { x: actual.offsetLeft, w: actual.offsetWidth } : null;
-    ui.vista = v.dataset.vista; fijar('enzo-rutina-vista', ui.vista); ctx.render();
-  };
+  resorteModo(view); gelSemana(view);
   view.addEventListener('click', e => {
+    const go = e.target.closest('[data-ej-go]');
+    if (go) {
+      const a = ctx.store.buscar('actividades', go.dataset.ejGo); if (!a) return;
+      const curso = ejercicio.enCurso();
+      if (curso && (!a.ejercicioId || curso === a.ejercicioId)) { ejercicio.continuar(ctx); return; }
+      if (rutinaEj(a.ejercicioId)) { ejercicio.empezar(ctx, a.ejercicioId); return; }
+      desplegable(go, RUTINAS.map(r => ({ v: r.id, html: esc(r.nombre) })), id => ejercicio.empezar(ctx, id));
+      return;
+    }
     if (e.target.closest('[data-volver]')) { ui.editando = false; ctx.render(); window.scrollTo(0, 0); return; }
     if (e.target.closest('[data-editar]')) { ui.editando = true; ui.diaEdit = DIAS_SEMANA[desdeIso(ui.fecha).getDay()]; ctx.render(); window.scrollTo(0, 0); return; }
     const ed = e.target.closest('[data-edia]');
@@ -312,7 +319,7 @@ export function montar(view, ctx) {
     const mm = e.target.closest('[data-mes]');
     if (mm) { ui.mes = new Date(ui.mes.getFullYear(), ui.mes.getMonth() + Number(mm.dataset.mes), 1); ctx.render(); return; }
     const k = e.target.closest('[data-ir]');
-    if (k) { ui.fecha = k.dataset.ir; ui.vista = 'rutina'; fijar('enzo-rutina-vista', 'rutina'); ctx.render(); window.scrollTo(0, 0); return; }
+    if (k) { verDia(k.dataset.ir); ctx.ir('today', 'rutina'); return; }
     const n = e.target.closest('[data-dia]');
     if (n) { const d = desdeIso(ui.fecha); d.setDate(d.getDate() + Number(n.dataset.dia)); ui.fecha = iso(d); ctx.render(); return; }
     const r = e.target.closest('[data-reg]');
@@ -322,23 +329,6 @@ export function montar(view, ctx) {
       ctx.store.guardar('registros', { id, fecha: ui.fecha, actividadId: a.id, nombre: a.nombre, tipo: a.tipo, core: !!a.core, hecho: !(previo && previo.hecho) });
     }
   });
-}
-
-/* La selección viaja a la nueva sección y se estira a medio camino, como gel. */
-function gel() {
-  const desde = ui.selDesde; ui.selDesde = null;
-  const bar = barraEl(), b = bar && bar.querySelector('[aria-current="true"]');
-  if (!desde || !b || reduceMotion()) return;
-  const x = b.offsetLeft, w = b.offsetWidth, a = Math.min(desde.x, x), z = Math.max(desde.x + desde.w, x + w);
-  const sel = document.createElement('span'); sel.className = 'rsel';
-  bar.prepend(sel); bar.classList.add('moviendo');
-  const an = sel.animate([
-    { left: desde.x + 'px', width: desde.w + 'px' },
-    { left: a + 'px', width: (z - a) * .82 + 'px', offset: .45 },
-    { left: x + 'px', width: w + 'px' }
-  ], { duration: 420, easing: 'cubic-bezier(.23,1,.32,1)', fill: 'forwards' });
-  const fin = () => { bar.classList.remove('moviendo'); sel.remove(); };
-  an.onfinish = an.oncancel = fin; setTimeout(fin, 480);
 }
 
 /* El selector de día también desliza su selección con efecto de gel. */
@@ -366,16 +356,6 @@ function resorteModo(view) {
   const despues = b.offsetWidth;
   if (antes !== despues) b.animate([{ width: antes + 'px' }, { width: despues + 'px' }], { duration: 420, easing: RESORTE });
 }
-
-/* iPhone: la barra se encoge a la sección activa al bajar y regresa al subir. */
-let ultimoY = 0;
-window.addEventListener('scroll', () => {
-  const y = window.scrollY, bar = barraEl();
-  const min = innerWidth < 820 && (y > ultimoY + 2 && y > 30 ? true : y < ultimoY - 2 || y <= 30 ? false : ui.min);
-  ultimoY = y;
-  if (min === ui.min) return;
-  ui.min = min; bar?.classList.toggle('min', min);
-}, { passive: true });
 
 /* ---------- Resumen del mes: Contribution graph del año, calendario y heatmap por tipo ---------- */
 function indice(s) {

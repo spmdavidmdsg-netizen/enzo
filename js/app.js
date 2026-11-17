@@ -7,12 +7,22 @@ import * as rutina from './pages/rutina.js';
 import { cargarTipos } from './tipos.js';
 import { VERSION_APP } from './config.js';
 
+/* Páginas del menú (en inglés) y sus secciones (barra de píldora abajo en el celular, arriba en la Mac). */
+const pronto = (titulo, texto) => ({ render: () => `<h1 class="st">${titulo}</h1><p class="empty st" style="--i:1">${texto}</p>` });
+const vistaRutina = v => ({ render: c => rutina.render(c, v), montar: (el, c) => rutina.montar(el, c), ocultaBarra: () => rutina.ocultaBarra(v) });
 const PAGES = [
-  { id: 'pendientes', nombre: 'Pendientes', mod: pendientes },
-  { id: 'rutina', nombre: 'Rutina', mod: rutina }
+  { id: 'today', nombre: 'Today', secciones: [
+    { id: 'pendientes', nombre: 'Pendientes', mod: pendientes },
+    { id: 'rutina', nombre: 'Rutina', mod: vistaRutina('rutina') }] },
+  { id: 'projects', nombre: 'Projects', secciones: [
+    { id: 'proyectos', nombre: 'Proyectos', mod: pronto('Proyectos', 'Aquí vivirán tus proyectos, exploratorios y delimitados, con sus pendientes y notas.') },
+    { id: 'notas', nombre: 'Notas', mod: pronto('Notas', 'Aquí vivirán tus notas, sueltas o de un proyecto.') }] },
+  { id: 'control', nombre: 'Control', secciones: [
+    { id: 'resumen', nombre: 'Resumen', mod: vistaRutina('resumen') },
+    { id: 'presupuesto', nombre: 'Presupuesto', mod: pronto('Presupuesto', 'Aquí vivirá tu presupuesto del mes: ingresos, gastos planeados y estimados, y el cuadre al final.') }] }
 ];
-const ui = { page: leerPref('enzo-pagina', 'pendientes'), bienvenida: !new URLSearchParams(location.search).has('sinbienvenida') };
-if (!PAGES.some(p => p.id === ui.page)) ui.page = 'pendientes';
+/* Enzo siempre abre en Today › Pendientes; dentro de la sesión cada página recuerda su sección. */
+const ui = { page: 'today', sec: { today: 'pendientes', projects: 'proyectos', control: 'resumen' }, bienvenida: !new URLSearchParams(location.search).has('sinbienvenida') };
 
 function leerPref(k, def) { try { return localStorage.getItem(k) || def; } catch (e) { return def; } }
 function fijarPref(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
@@ -22,27 +32,36 @@ const escribiendo = el => el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELEC
 const hojaAbierta = () => document.body.classList.contains('sheet-open');
 
 /* ---------- contexto que reciben las páginas ---------- */
-const ctx = { store, toast, abrirHoja, cerrarHoja, render: () => render() };
+const ctx = { store, toast, abrirHoja, cerrarHoja, render: () => render(), ir: (p, sec) => ir(p, sec) };
 
 /* ---------- render ----------
    Cada render crea un contenedor nuevo, así los eventos de la página no se acumulan. */
 let entrada = true, te = null;
+const pagina = () => PAGES.find(x => x.id === ui.page);
+const seccion = () => { const p = pagina(); return p.secciones.find(x => x.id === ui.sec[p.id]) || p.secciones[0]; };
 function render() {
-  const p = PAGES.find(x => x.id === ui.page), v = $('#view');
+  const p = pagina(), sc = seccion(), v = $('#view');
   const caja = document.createElement('div');
-  caja.innerHTML = p.mod.render(ctx);
+  caja.innerHTML = sc.mod.render(ctx);
   v.replaceChildren(caja);
-  p.mod.montar?.(caja, ctx);
+  sc.mod.montar?.(caja, ctx);
   if (entrada && !ui.bienvenida) { entrada = false; v.classList.add('enter'); clearTimeout(te); te = setTimeout(() => v.classList.remove('enter'), 900); }
-  document.body.dataset.page = ui.page;
+  document.body.dataset.page = sc.id;        // la sección decide qué controles fijos se ven (captura y lupa en Pendientes)
+  document.body.dataset.pagina = p.id;
+  pintarBarra();
   $('#cap-label').textContent = p.nombre;
   $('#cap-pop').innerHTML = PAGES.map(x => `<button class="pop-item" data-page="${x.id}" aria-current="${x.id === ui.page}">${x.nombre}</button>`).join('');
   pintarSync();
 }
 
-function ir(id) {
+function ir(id, sec) {
+  if (sec) {
+    if (id === ui.page && sec === ui.sec[id]) return;
+    if (id === ui.page) { cambiarSeccion(sec); return; }
+    ui.sec[id] = sec;
+  }
   if (id === ui.page) return;
-  ui.page = id; fijarPref('enzo-pagina', id);
+  ui.page = id;
   if (document.startViewTransition && !reduceMotion()) {
     /* Con transición, la página entra de una vez (sin la animación escalonada, que la haría parpadear) */
     const raiz = document.documentElement; raiz.classList.add('vt-pagina');
@@ -52,6 +71,53 @@ function ir(id) {
   } else { entrada = true; render(); }
   window.scrollTo(0, 0);
 }
+
+/* ---------- barra de secciones ----------
+   Un solo elemento que nunca se reconstruye (en el iPhone, rehacer el vidrio en cada cambio parpadea).
+   La selección viaja a la nueva sección y se estira a medio camino, como gel. */
+const bar = $('#rbar');
+let barPagina = null, selDesde = null, barMin = false;
+function pintarBarra() {
+  const p = pagina(), sc = seccion();
+  if (barPagina !== p.id) { bar.innerHTML = p.secciones.map(x => `<button data-sec="${x.id}">${x.nombre}</button>`).join(''); barPagina = p.id; }
+  bar.querySelectorAll('[data-sec]').forEach(b => b.setAttribute('aria-current', b.dataset.sec === sc.id));
+  bar.classList.toggle('min', barMin);
+  bar.hidden = !!sc.mod.ocultaBarra?.();
+  gel();
+}
+function cambiarSeccion(id) {
+  const actual = bar.querySelector('[aria-current="true"]');
+  selDesde = actual ? { x: actual.offsetLeft, w: actual.offsetWidth } : null;
+  ui.sec[ui.page] = id; render(); window.scrollTo(0, 0);
+}
+bar.addEventListener('click', e => {
+  const b = e.target.closest('[data-sec]');
+  if (b && b.dataset.sec !== seccion().id) cambiarSeccion(b.dataset.sec);
+});
+function gel() {
+  const desde = selDesde; selDesde = null;
+  const b = bar.querySelector('[aria-current="true"]');
+  if (!desde || !b || reduceMotion()) return;
+  const x = b.offsetLeft, w = b.offsetWidth, a = Math.min(desde.x, x), z = Math.max(desde.x + desde.w, x + w);
+  const sel = document.createElement('span'); sel.className = 'rsel';
+  bar.prepend(sel); bar.classList.add('moviendo');
+  const an = sel.animate([
+    { left: desde.x + 'px', width: desde.w + 'px' },
+    { left: a + 'px', width: (z - a) * .82 + 'px', offset: .45 },
+    { left: x + 'px', width: w + 'px' }
+  ], { duration: 420, easing: 'cubic-bezier(.23,1,.32,1)', fill: 'forwards' });
+  const fin = () => { bar.classList.remove('moviendo'); sel.remove(); };
+  an.onfinish = an.oncancel = fin; setTimeout(fin, 480);
+}
+/* iPhone: la barra se encoge a la sección activa al bajar y regresa al subir. */
+let ultimoY = 0;
+window.addEventListener('scroll', () => {
+  const y = window.scrollY;
+  const min = innerWidth < 820 && (y > ultimoY + 2 && y > 30 ? true : y < ultimoY - 2 || y <= 30 ? false : barMin);
+  ultimoY = y;
+  if (min === barMin) return;
+  barMin = min; bar.classList.toggle('min', min);
+}, { passive: true });
 
 /* Menú de página: un toque pasa a la siguiente; mantener presionado muestra la lista. */
 const capW = $('.cap-wrap');
@@ -178,7 +244,7 @@ function pintarMenu() {
         : `<p class="note" style="margin-top:6px">Para guardar en Google Sheets y ver tus datos en todos tus dispositivos, pega aquí tu enlace de conexión.</p>
            <div class="row"><input class="inp" id="m-enlace" placeholder="Enlace de conexión" autocomplete="off" autocapitalize="off" spellcheck="false"><button class="btn p" data-m="conectar">Conectar</button></div>`}
     </div>
-    ${matchMedia('(hover:hover) and (pointer:fine)').matches ? '<p class="note keys-note">Atajos: <kbd>1</kbd> Pendientes · <kbd>2</kbd> Rutina · <kbd>N</kbd> nuevo pendiente · <kbd>B</kbd> buscar · <kbd>C</kbd> claro u oscuro</p>' : ''}
+    ${matchMedia('(hover:hover) and (pointer:fine)').matches ? '<p class="note keys-note">Atajos: <kbd>1</kbd> Today · <kbd>2</kbd> Projects · <kbd>3</kbd> Control · <kbd>N</kbd> nuevo pendiente · <kbd>B</kbd> buscar · <kbd>C</kbd> claro u oscuro</p>' : ''}
     <p class="note" style="margin-top:12px;text-align:right">Versión ${VERSION_APP}</p>`;
 }
 

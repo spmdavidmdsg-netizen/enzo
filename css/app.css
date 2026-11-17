@@ -341,10 +341,10 @@ kbd{font:inherit;font-size:var(--t-min);padding:1px 6px;border:1px solid var(--l
 .spot-panel[hidden]{display:none}
 @keyframes spot-in{from{opacity:0;transform:translateY(-8px) scale(.985)}}
 .sr-res{display:grid}
-.sr-item{display:block;width:100%;min-height:44px;padding:10px 14px;border-radius:18px;transition:background 120ms ease}
+.sr-item{display:grid;grid-template-columns:20px minmax(0,1fr);gap:12px;align-items:center;width:100%;min-height:44px;padding:10px 14px;border-radius:18px;text-align:left;transition:background 120ms ease}
 .sr-item b{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sr-item small{display:block;color:var(--ink3);font-size:var(--t-small)}
-.sr-item.dim b{color:var(--ink3);text-decoration:line-through}
+.sr-item.dim b{color:var(--ink3)}
 .sr-item.kb{background:var(--field-hi)}
 .sr-empty{padding:14px;color:var(--ink3);font-size:var(--t-body)}
 
@@ -395,7 +395,7 @@ kbd{font:inherit;font-size:var(--t-min);padding:1px 6px;border:1px solid var(--l
   .sw[aria-checked="true"]::after{transform:translateX(6px)}
   .sw[aria-checked="true"]:active::after{transform:translateX(2px)}
   #toast{bottom:32px}   /* Mac: abajo al centro, sin tapar el menú ni la barra de secciones */
-  #sheet.spot{top:16%;left:50%;right:auto;width:min(640px,calc(100vw - 48px));transform:translate(-50%,-10px) scale(.98)}
+  #sheet.spot{top:16%;left:50%;right:auto;width:min(860px,calc(100vw - 48px));transform:translate(-50%,-10px) scale(.98)}
   .sheet-open #sheet.spot{transform:translate(-50%,0)}
   .spot-bar{height:60px;padding:0 24px}
   .sr-input{font-size:19px}
@@ -1003,3 +1003,45 @@ body.fijo{position:fixed;left:0;right:0;overflow:hidden}
   .pp-c{grid-template-columns:minmax(0,1fr) 96px 120px}
 }
 @media (hover:hover) and (pointer:fine){.pp-row:hover b{color:var(--accent-strong)}}
+
+/* ---------- Buscador tipo Spotlight: barra, categorías y filtros ---------- */
+.sr-ic{display:grid;place-items:center;color:var(--ink3)}
+.sr-ic svg{width:18px;height:18px}
+.spot-row{display:flex;flex-direction:column;gap:10px}
+.spot-chip{flex:none;height:28px;padding:0 12px;border-radius:999px;background:var(--fill);color:var(--on-fill);font-size:var(--t-sec);font-weight:600;display:inline-flex;align-items:center;animation:spot-chip 260ms var(--ease-out)}
+.spot-chip[hidden]{display:none}
+@keyframes spot-chip{from{opacity:0;transform:scale(.8)}}
+/* celular: categorías como píldoras con nombre, en una fila que se desliza */
+.spot-cats{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -12px;padding:2px 12px}
+.spot-cats::-webkit-scrollbar{display:none}
+.spot-cat{flex:none;display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 15px;border-radius:999px;font-size:var(--t-sec);font-weight:600;color:var(--ink2);transition:transform 420ms var(--spring),color 160ms ease}
+.spot-cat svg{width:17px;height:17px}
+.spot-cat:active{transform:scale(.94);transition-duration:120ms}
+.spot-cat[aria-pressed="true"]{background:var(--fill);color:var(--on-fill);box-shadow:none}
+.sheet-open #sheet.spot .spot-cat{animation:spot-pop 520ms cubic-bezier(.34,1.56,.64,1) backwards;animation-delay:calc(60ms + var(--i)*45ms)}
+@keyframes spot-pop{from{opacity:0;transform:translateY(-10px) scale(.6)}}
+.spot-filters{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:10px -12px 0;padding:2px 12px}
+.spot-filters::-webkit-scrollbar{display:none}
+.spot-filters[hidden]{display:none}
+.sf{flex:none;display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:999px;font-size:var(--t-sec);font-weight:500;color:var(--ink2);background:var(--g-tint);box-shadow:inset 0 0 0 1px var(--line);-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);transition:transform 420ms var(--spring),background-color 160ms ease,color 160ms ease}
+.sf svg{width:12px;height:12px}
+.sf:active{transform:scale(.95);transition-duration:120ms}
+.sf[aria-pressed="true"]{background:var(--fill);color:var(--on-fill);box-shadow:none}
+.spot-filters.anim>*{animation:sf-pop 460ms cubic-bezier(.34,1.56,.64,1) backwards;animation-delay:calc(var(--i,0)*45ms)}
+@keyframes sf-pop{from{opacity:0;transform:translateY(-10px) scale(.7)}}
+/* Mac: barra grande y las categorías como círculos que salen de ella, igual que en el task manager */
+@media (min-width:820px){
+  .spot-row{flex-direction:row;align-items:center}
+  .spot-row .spot-bar{flex:1;min-width:0}
+  .spot-cats{margin:0;padding:0;overflow:visible;gap:10px}
+  .spot-cat{width:60px;height:60px;padding:0;border-radius:50%;justify-content:center}
+  .spot-cat span{display:none}
+  .spot-cat svg{width:21px;height:21px}
+  .sheet-open #sheet.spot .spot-cat{animation-name:spot-pop-mac;animation-delay:calc(90ms + var(--i)*55ms)}
+  @keyframes spot-pop-mac{from{opacity:0;transform:translateX(calc(-70px - var(--i)*70px)) scale(.4)}}
+  .spot-filters{flex-wrap:wrap;margin:12px 0 0;padding:0;overflow:visible}
+  .sf{height:32px}
+}
+@media (hover:hover) and (pointer:fine){ .spot-cat:not([aria-pressed="true"]):hover,.sf:not([aria-pressed="true"]):hover{color:var(--ink)} }
+@media (prefers-reduced-motion:reduce){ .sheet-open #sheet.spot .spot-cat,.spot-filters.anim>*,.spot-chip{animation:none} }
+@media (max-width:819px){.con-teclado .spot-panel{max-height:calc(var(--vv-h) - var(--safe-t) - 250px)}}

@@ -51,12 +51,6 @@ function etiquetaHora(n) {
   if (g === 'Últimos 7 días') return cap(DIAS[d.getDay()].slice(0, 3));
   return `${d.getDate()} ${MESES[d.getMonth()].slice(0, 3)}`;
 }
-/* Una sola función para todas las búsquedas (también la usa la lupa) */
-export function buscar(store, q) {
-  const t = norm(q).trim();
-  if (!t) return [];
-  return ordenadas(store.state).filter(n => norm(n.titulo).includes(t) || norm(textoDe(n.cuerpo)).includes(t)).slice(0, 20);
-}
 
 /* ---------- vista ---------- */
 export const ocultaBarra = () => !esMac() && !!ui.abierta;

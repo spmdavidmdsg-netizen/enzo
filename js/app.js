@@ -1,5 +1,5 @@
 /* Enzo · arranque, bienvenida, menú de páginas, Ajustes, hoja, buscador, atajos y avisos. */
-import { $, esc, reduceMotion, fechaCorta } from './util.js';
+import { $, esc, reduceMotion } from './util.js';
 import * as store from './store.js';
 import * as api from './api.js';
 import * as pendientes from './pages/pendientes.js';
@@ -7,6 +7,7 @@ import * as rutina from './pages/rutina.js';
 import * as proyectos from './pages/proyectos.js';
 import * as notas from './pages/notas.js';
 import * as presupuesto from './pages/presupuesto.js';
+import * as buscador from './buscador.js';
 import { cargarTipos } from './tipos.js';
 import { VERSION_APP } from './config.js';
 
@@ -256,7 +257,7 @@ function pintarMenu() {
         : `<p class="note" style="margin-top:6px">Para guardar en Google Sheets y ver tus datos en todos tus dispositivos, pega aquí tu enlace de conexión.</p>
            <div class="row"><input class="inp" id="m-enlace" placeholder="Enlace de conexión" autocomplete="off" autocapitalize="off" spellcheck="false"><button class="btn p" data-m="conectar">Conectar</button></div>`}
     </div>
-    ${matchMedia('(hover:hover) and (pointer:fine)').matches ? '<p class="note keys-note">Atajos: <kbd>1</kbd> Today · <kbd>2</kbd> Projects · <kbd>3</kbd> Control · <kbd>N</kbd> nuevo (pendiente, proyecto o nota) · <kbd>B</kbd> buscar · <kbd>C</kbd> claro u oscuro</p>' : ''}
+    ${matchMedia('(hover:hover) and (pointer:fine)').matches ? '<p class="note keys-note">Atajos: <kbd>1</kbd> Today · <kbd>2</kbd> Projects · <kbd>3</kbd> Control · <kbd>S</kbd> cambiar de sección · <kbd>N</kbd> nuevo (pendiente, proyecto o nota) · <kbd>B</kbd> buscar · <kbd>C</kbd> claro u oscuro</p>' : ''}
     <p class="note" style="margin-top:12px;text-align:right">Versión ${VERSION_APP}</p>`;
 }
 
@@ -374,30 +375,14 @@ function cerrarHoja() {
 }
 $('#scrim').addEventListener('click', cerrarHoja);
 
-/* ---------- buscador (Spotlight, sin filtros) ---------- */
+/* ---------- buscador (Spotlight con categorías y filtros: js/buscador.js) ---------- */
 function abrirBuscador() {
   if (ui.bienvenida) return;
-  abrirHoja(`<div class="spot-bar glass"><svg viewBox="0 0 20 20"><circle cx="9" cy="9" r="6"/><path d="M13.5 13.5L17 17"/></svg><input class="sr-input" id="sr-q" placeholder="Buscar pendientes…" aria-label="Buscar" autocomplete="off" autofocus enterkeyhint="search"></div>
-    <div class="spot-panel glass tint" id="sr-panel" hidden><div class="sr-res" id="sr-res" role="listbox" aria-label="Resultados"></div></div>`, {
-    clase: 'spot',
-    montar: s => {
-      const q = s.querySelector('#sr-q'), panel = s.querySelector('#sr-panel'), res = s.querySelector('#sr-res');
-      let sel = 0, lista = [];
-      const pintar = () => {
-        lista = pendientes.buscar(store, q.value);
-        panel.hidden = !q.value.trim();
-        res.innerHTML = lista.length ? lista.map((p, i) => `<button class="sr-item${i === sel ? ' kb' : ''}${p.estado === 'hecho' ? ' dim' : ''}" data-id="${esc(p.id)}" role="option" aria-selected="${i === sel}">
-            <b>${esc(p.titulo)}</b><small>${p.estado === 'hecho' ? 'Hecha' : 'Pendiente'}${p.fecha ? ' · ' + fechaCorta(p.fecha) : ''}</small></button>`).join('')
-          : `<p class="sr-empty">Sin resultados para «${esc(q.value.trim())}».</p>`;
-      };
-      const abrir = id => { cerrarHoja(); pendientes.abrirDetalle(ctx, id); };
-      q.addEventListener('input', () => { sel = 0; pintar(); });
-      q.addEventListener('keydown', e => {
-        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); if (!lista.length) return; sel = (sel + (e.key === 'ArrowDown' ? 1 : -1) + lista.length) % lista.length; pintar(); }
-        if (e.key === 'Enter' && lista[sel]) { e.preventDefault(); abrir(lista[sel].id); }
-      });
-      res.addEventListener('click', e => { const b = e.target.closest('[data-id]'); if (b) abrir(b.dataset.id); });
-    }
+  buscador.abrirBuscador(ctx, x => {
+    if (x.k === 'pendiente') pendientes.abrirDetalle(ctx, x.id);
+    else if (x.k === 'proyecto') ctx.verProyecto(x.id);
+    else if (x.k === 'nota') ctx.abrirNota(x.id);
+    else if (x.k === 'partida') { presupuesto.verMes(x.id, ctx.store); ir('control', 'presupuesto'); render(); presupuesto.abrir(ctx, x.id); }
   });
 }
 
@@ -421,6 +406,12 @@ document.addEventListener('keydown', e => {
   if (k === 'n') { e.preventDefault(); nuevoAqui($('#fab')); }
   if (k === 'b') { e.preventDefault(); abrirBuscador(); }
   if (k === 'c') { e.preventDefault(); alternarTema(); }
+  /* S: siguiente sección de la página (Pendientes ↔ Rutina, Proyectos ↔ Notas, Resumen ↔ Presupuesto); ⇧S, la anterior */
+  if (k === 's' && !bar.hidden) {
+    e.preventDefault();
+    const p = pagina(), i = p.secciones.findIndex(x => x.id === seccion().id), n = p.secciones.length;
+    cambiarSeccion(p.secciones[(i + (e.shiftKey ? n - 1 : 1)) % n].id);
+  }
   const num = PAGES[Number(e.key) - 1];
   if (num) { e.preventDefault(); ir(num.id); }
 });

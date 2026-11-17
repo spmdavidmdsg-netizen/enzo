@@ -7,7 +7,6 @@ import { desplegable } from '../desplegable.js';
 
 const ESPERA = 4000;
 const enCurso = new Map();          // id -> { timer, inicio }
-const norm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 /* ---------- consultas ---------- */
 const abiertos = s => s.pendientes.filter(p => p.estado !== 'hecho');
@@ -257,12 +256,3 @@ export function abrirDetalle(ctx, id, desde, base = {}) {
   });
 }
 
-/* ---------- búsqueda (para el buscador tipo Spotlight) ---------- */
-export function buscar(store, q) {
-  const t = norm(q).trim();
-  if (!t) return [];
-  return store.state.pendientes
-    .filter(p => norm(p.titulo).includes(t) || norm(p.notas).includes(t))
-    .sort((a, b) => ((a.estado === 'hecho') - (b.estado === 'hecho')) || String(a.fecha || '9').localeCompare(String(b.fecha || '9')))
-    .slice(0, 20);
-}

@@ -7,7 +7,7 @@ import { esc, uid, MESES, cap, pieHoja } from '../util.js';
 import { desplegable } from '../desplegable.js';
 
 const hoyMes = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); };
-const ui = { mes: hoyMes(), vista: 'plan' };
+const ui = { mes: hoyMes(), vista: 'plan', segDesde: null };   // segDesde: posición previa de Plan/Cierre, para animar el cambio
 const repetidas = new Set();   // meses ya revisados en esta sesión
 const esMac = () => matchMedia('(min-width:820px)').matches;
 
@@ -156,11 +156,19 @@ function cuadrar(view, s) {
 /* ---------- interacción ---------- */
 export function montar(view, ctx) {
   cuadrar(view, ctx.store.state);
+  /* Plan ↔ Cierre: la página se redibuja, así que la selección arranca donde estaba y se desliza a la nueva */
+  const sg = view.querySelector('.pp-seg');
+  if (sg && ui.segDesde !== null) {
+    const a = ui.vista === 'cierre' ? 1 : 0;
+    sg.style.setProperty('--i', ui.segDesde); void sg.offsetWidth;
+    requestAnimationFrame(() => sg.style.setProperty('--i', a));
+  }
+  ui.segDesde = null;
   view.addEventListener('click', e => {
     const pm = e.target.closest('[data-pmes]');
     if (pm) { ui.mes = mover(ui.mes, Number(pm.dataset.pmes)); ctx.render(); return; }
     const pv = e.target.closest('[data-pvista]');
-    if (pv) { if (pv.dataset.pvista !== ui.vista) { ui.vista = pv.dataset.pvista; ctx.render(); } return; }
+    if (pv) { if (pv.dataset.pvista !== ui.vista) { ui.segDesde = ui.vista === 'cierre' ? 1 : 0; ui.vista = pv.dataset.pvista; ctx.render(); } return; }
     const pr = e.target.closest('[data-par]');
     if (pr) { abrirPartida(ctx, pr.dataset.par, pr); return; }
     if (e.target.closest('[data-copiar-ant]')) {
@@ -197,6 +205,9 @@ export function montar(view, ctx) {
   view.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches('.pp-in input')) e.target.blur(); });
 }
 
+/* Desde el buscador: ir al mes de la partida y abrirla. */
+export function verMes(id, store) { const p = store.buscar('partidas', id); if (p) { ui.mes = p.mes; ui.vista = 'plan'; } }
+export function abrir(ctx, id) { abrirPartida(ctx, id); }
 export function nuevo(ctx, desde) { ui.vista = 'plan'; abrirPartida(ctx, null, desde); }
 export const etiquetaNuevo = () => 'Nueva partida';
 

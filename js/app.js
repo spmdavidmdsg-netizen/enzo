@@ -305,6 +305,27 @@ async function conectarCon(token) {
 function pintarInicial() { $('#me-i').textContent = (nombre()[0] || 'D').toUpperCase(); }
 function pintarSync() { $('#sync').dataset.s = store.estado.s; }
 
+/* ---------- iPhone: teclado ----------
+   iOS no achica la página al abrir el teclado: mide cuánto tapa (--teclado) y el alto visible (--vv-h),
+   para que la hoja y la barra de formato de Notas queden justo arriba del teclado. */
+function ajustarTeclado() {
+  const vv = window.visualViewport; if (!vv) return;
+  const t = Math.max(0, Math.round(innerHeight - vv.height - vv.offsetTop)), k = t > 60 ? t : 0;
+  const r = document.documentElement;
+  r.style.setProperty('--teclado', k + 'px'); r.style.setProperty('--vv-h', Math.round(vv.height) + 'px');
+  r.classList.toggle('con-teclado', k > 0);
+}
+if (window.visualViewport) { visualViewport.addEventListener('resize', ajustarTeclado); visualViewport.addEventListener('scroll', ajustarTeclado); }
+/* Con una hoja abierta en el celular, la página de atrás no se mueve: así iOS no la desplaza
+   al escribir y la hoja no se sale de la pantalla. */
+let yHoja = 0;
+const tactil = () => matchMedia('(pointer:coarse)').matches && !matchMedia('(min-width:820px)').matches;
+function fijarPagina(si) {
+  const b = document.body;
+  if (si && tactil() && !b.classList.contains('fijo')) { yHoja = window.scrollY; b.style.top = -yHoja + 'px'; b.classList.add('fijo'); }
+  else if (!si && b.classList.contains('fijo')) { b.classList.remove('fijo'); b.style.top = ''; window.scrollTo(0, yHoja); }
+}
+
 /* ---------- hoja ----------
    Si se abre desde un botón (`desde`), la hoja nace de él y regresa a él al cerrarse. */
 let alCerrar = null, foco = null, origen = null;
@@ -324,6 +345,7 @@ function abrirHoja(html, { montar, cerrar, clase = '', desde = null } = {}) {
   s.className = clase === 'spot' ? 'spot' : `glass tint ${clase}${origen ? ' morph' : ''}`;
   s.innerHTML = clase === 'spot' ? html : `<div class="sh-grab" aria-hidden="true"></div><div class="sh-scroll">${html}</div>`;
   document.body.classList.add('sheet-open');
+  fijarPagina(true);
   if (origen) {
     const m = desdeBoton(s, origen);
     s.animate([{ transform: m.de, borderRadius: '50%', opacity: .6 }, { transform: m.a, opacity: 1 }], { duration: 480, easing: RESORTE });
@@ -344,6 +366,7 @@ function cerrarHoja() {
   } else s.classList.remove('morph');
   origen = null;
   document.body.classList.remove('sheet-open');
+  fijarPagina(false);
   const fn = alCerrar; alCerrar = null; fn?.(s);
   render();
   foco?.isConnected && foco.focus?.({ preventScroll: true });

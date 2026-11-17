@@ -207,10 +207,9 @@ export function montar(view, ctx) {
   ctxG = ctx;
   const abierta = !!view.querySelector('.n-ed');
   document.body.classList.toggle('editando-nota', abierta && !esMac());
-  ajustarTeclado();
   view.addEventListener('input', e => {
     if (e.target.matches('[data-nq]')) { ui.q = e.target.value; view.querySelector('.n-items').innerHTML = items(ctx.store.state); return; }
-    if (e.target.closest('.n-ed')) guardarPronto();
+    if (e.target.closest('.n-ed')) { guardarPronto(); if (e.target.closest('[data-n-cuerpo]')) verCursor(); }
   });
   /* Al salir de la nota se guarda; pasar del título al texto no cuenta como salir (guardar ahí redibujaría la nota) */
   view.addEventListener('focusout', e => {
@@ -221,8 +220,24 @@ export function montar(view, ctx) {
     if (e.target.matches('[data-n-titulo]') && e.key === 'Enter') { e.preventDefault(); cuerpoEl()?.focus(); }
     if (e.target.closest('[data-n-cuerpo]') && (e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'l') { e.preventDefault(); formato('chk'); }
   });
-  /* Los botones de formato no le quitan el cursor al texto */
-  view.addEventListener('mousedown', e => { if (e.target.closest('.n-bar [data-cmd],.n-estilos [data-cmd]')) e.preventDefault(); });
+  /* Los botones de formato no le quitan el cursor al texto: si lo hicieran, en el iPhone el teclado
+     se cerraría y volvería a abrir y la pantalla brincaría. Con el dedo, la acción va al soltar. */
+  const SEL = '.n-bar [data-cmd],.n-estilos [data-cmd]';
+  view.addEventListener('mousedown', e => { if (e.target.closest(SEL)) e.preventDefault(); });
+  let toque = null;
+  view.addEventListener('touchstart', e => {
+    const b = e.target.closest(SEL); if (!b) return;
+    e.preventDefault();
+    toque = { b, x: e.touches[0].clientX, y: e.touches[0].clientY };
+    b.classList.add('pulsado');
+  }, { passive: false });
+  view.addEventListener('touchmove', e => { if (toque && Math.hypot(e.touches[0].clientX - toque.x, e.touches[0].clientY - toque.y) > 12) { toque.b.classList.remove('pulsado'); toque = null; } }, { passive: true });
+  view.addEventListener('touchend', e => {
+    if (!toque) return;
+    const b = toque.b; toque = null; b.classList.remove('pulsado');
+    e.preventDefault();
+    accion(b, view, ctx);
+  });
   view.addEventListener('click', e => {
     const it = e.target.closest('[data-nota]');
     if (it) { if (ui.abierta) cerrarNota(ctx); ui.abierta = it.dataset.nota; ctx.render(); if (!esMac()) window.scrollTo(0, 0); return; }
@@ -245,7 +260,11 @@ export function montar(view, ctx) {
       });
       return;
     }
-    const b = e.target.closest('[data-cmd]'); if (!b) return;
+    const b = e.target.closest('[data-cmd]'); if (b) accion(b, view, ctx);
+  });
+}
+
+function accion(b, view, ctx) {
     const cmd = b.dataset.cmd;
     if (cmd === 'aa') { ui.estilos = !ui.estilos; view.querySelector('.n-estilos').hidden = !ui.estilos; b.setAttribute('aria-expanded', ui.estilos); return; }
     if (cmd === 'mas') {
@@ -261,13 +280,16 @@ export function montar(view, ctx) {
       return;
     }
     formato(cmd);
-  });
 }
 
-/* iPhone: la barra de formato se queda justo arriba del teclado. */
-function ajustarTeclado() {
-  const vv = window.visualViewport; if (!vv) return;
-  const t = Math.max(0, innerHeight - vv.height - vv.offsetTop);
-  document.documentElement.style.setProperty('--teclado', (t > 60 ? t : 0) + 'px');
+/* iPhone: si la línea que escribes queda detrás de la barra de formato, la página sube lo justo. */
+function verCursor() {
+  if (esMac()) return;
+  const sel = getSelection(); if (!sel.rangeCount) return;
+  let r = sel.getRangeAt(0).getClientRects()[0];
+  if (!r) { const n = sel.anchorNode; r = (n && (n.nodeType === 1 ? n : n.parentElement))?.getBoundingClientRect(); }
+  const bar = document.querySelector('.n-bar'), vv = window.visualViewport;
+  if (!r || !bar) return;
+  const limite = (vv ? vv.offsetTop + vv.height : innerHeight) - bar.offsetHeight - 12;
+  if (r.bottom > limite) window.scrollBy(0, r.bottom - limite);
 }
-if (window.visualViewport) { visualViewport.addEventListener('resize', ajustarTeclado); visualViewport.addEventListener('scroll', ajustarTeclado); }

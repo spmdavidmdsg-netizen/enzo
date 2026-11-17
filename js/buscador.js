@@ -101,6 +101,18 @@ export function abrirBuscador(ctx, al) {
       };
       const abrir = x => { ctx.cerrarHoja(); al(x); };
       q.addEventListener('input', () => { sel = 0; pintar(false); });
+      /* Celular: la palomita de la barra del teclado quita el cursor del campo; si eso pasa sin haber tocado
+         algo del buscador (categoría, filtro, resultado), el buscador se cierra. */
+      let toqueDentro = 0;
+      sh.addEventListener('pointerdown', () => { toqueDentro = Date.now(); }, true);
+      q.addEventListener('blur', () => {
+        if (!matchMedia('(pointer:coarse)').matches || matchMedia('(min-width:820px)').matches) return;
+        setTimeout(() => {
+          const enHoja = document.body.classList.contains('sheet-open') && sh.classList.contains('spot');
+          if (!enHoja || sh.contains(document.activeElement) || document.querySelector('.dd') || Date.now() - toqueDentro < 600) return;
+          ctx.cerrarHoja();
+        }, 120);
+      });
       q.addEventListener('keydown', e => {
         if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
           e.preventDefault(); if (!lista.length) return;

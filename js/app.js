@@ -350,11 +350,12 @@ function abrirHoja(html, { montar, cerrar, clase = '', desde = null } = {}) {
   }
   alCerrar = cerrar || null;
   montar?.(s);
-  /* El buscador pone el cursor en el mismo toque: así el iPhone abre el teclado de inmediato
-     (si se hace un instante después, iOS ya no lo abre). Las demás hojas lo ponen al aparecer. */
+  /* Si la hoja tiene un campo para escribir de inmediato (buscador, o algo nuevo: pendiente, proyecto,
+     partida, actividad), el cursor se pone en el mismo toque: así el iPhone abre el teclado
+     (un instante después, iOS ya no lo abre). Al editar algo existente, solo se enfoca la hoja. */
   const af = s.querySelector('[autofocus]');
-  if (clase === 'spot' && af) af.focus({ preventScroll: true });
-  else requestAnimationFrame(() => (af || s).focus({ preventScroll: true }));
+  if (af) af.focus({ preventScroll: true });
+  else requestAnimationFrame(() => s.focus({ preventScroll: true }));
 }
 function cerrarHoja() {
   if (!hojaAbierta()) return;

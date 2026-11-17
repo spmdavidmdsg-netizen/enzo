@@ -15,7 +15,8 @@ const IC = {
   nota: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8l4 4V20a.5.5 0 0 1-.5.5h-11A.5.5 0 0 1 6 20V4a.5.5 0 0 1 .5-.5z"/><path d="M14 3.5V8h4M9 12h6M9 15.5h6"/></svg>',
   partida: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M14.6 9.2c-.5-.8-1.5-1.2-2.6-1.2-1.5 0-2.6.8-2.6 2s1.1 1.6 2.6 2 2.6.8 2.6 2-1.1 2-2.6 2c-1.2 0-2.2-.5-2.7-1.3M12 6.5v11"/></svg>',
   chev: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg>',
-  x: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7"/></svg>'
+  x: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7"/></svg>',
+  alterna: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 5.5h9.5L10 3M13 10.5H3.5L6 13"/></svg>'
 };
 const CATS = [['pendiente', 'Pendientes'], ['proyecto', 'Proyectos'], ['nota', 'Notas'], ['partida', 'Presupuesto']];
 const ESTADO_P = { activo: 'Activo', pausa: 'En pausa', terminado: 'Terminado' };
@@ -54,7 +55,13 @@ function filtros(s, F) {
   const pill = (campo, v, label) => `<button type="button" class="sf" style="--i:${i++}" data-f="${campo}" data-v="${v}" aria-pressed="${F[campo] === v}">${label}</button>`;
   const proy = () => { const n = F.pid ? nombreDe(s, F.pid) : ''; return `<button type="button" class="sf" style="--i:${i++}" data-fproy aria-pressed="${!!F.pid}" aria-haspopup="listbox" aria-expanded="false">${n ? esc(n) + IC.x : 'Proyecto' + IC.chev}</button>`; };
   if (F.kind === 'pendiente') return pill('st', 'abiertas', 'Abiertos') + pill('st', 'hechas', 'Hechos') + proy();
-  if (F.kind === 'proyecto') return pill('tipo', 'delimitado', 'Delimitados') + pill('tipo', 'exploratorio', 'Exploratorios') + pill('est', 'activo', 'Activos') + pill('est', 'pausa', 'En pausa') + pill('est', 'terminado', 'Terminados');
+  if (F.kind === 'proyecto') {
+    /* Tipo: un solo botón que alterna Delimitados → Exploratorios → sin filtro. Estado: menú desplegable. */
+    const tipo = F.tipo === 'delimitado' ? 'Delimitados' : F.tipo === 'exploratorio' ? 'Exploratorios' : 'Tipo';
+    const est = { activo: 'Activos', pausa: 'En pausa', terminado: 'Terminados' }[F.est];
+    return `<button type="button" class="sf" style="--i:${i++}" data-ftipo aria-pressed="${!!F.tipo}" title="Cambiar tipo">${tipo}${IC.alterna}</button>`
+      + `<button type="button" class="sf" style="--i:${i++}" data-fest aria-pressed="${!!F.est}" aria-haspopup="listbox" aria-expanded="false">${est ? est + IC.x : 'Estado' + IC.chev}</button>`;
+  }
   if (F.kind === 'nota') return proy();
   if (F.kind === 'partida') return pill('tp', 'ingreso', 'Ingresos') + pill('tp', 'gasto', 'Gastos');
   return '';
@@ -108,12 +115,20 @@ export function abrirBuscador(ctx, al) {
         const c = e.target.closest('.spot-cat');
         if (c) {
           F.kind = F.kind === c.dataset.kind ? '' : c.dataset.kind; limpiar(); pintar(true); q.focus({ preventScroll: true });
-          const caja = c.parentElement;   // celular: la categoría elegida siempre a la vista
-          if (caja.scrollWidth > caja.clientWidth) caja.scrollTo({ left: Math.max(0, c.offsetLeft - (caja.clientWidth - c.offsetWidth) / 2), behavior: 'smooth' });
           return;
         }
         const f = e.target.closest('[data-f]');
         if (f) { F[f.dataset.f] = F[f.dataset.f] === f.dataset.v ? '' : f.dataset.v; sel = 0; pintar(true); q.focus({ preventScroll: true }); return; }
+        if (e.target.closest('[data-ftipo]')) {
+          F.tipo = F.tipo === '' ? 'delimitado' : F.tipo === 'delimitado' ? 'exploratorio' : '';
+          sel = 0; pintar(true); q.focus({ preventScroll: true }); return;
+        }
+        const fe = e.target.closest('[data-fest]');
+        if (fe) {
+          if (F.est) { F.est = ''; sel = 0; pintar(true); q.focus({ preventScroll: true }); return; }
+          desplegable(fe, [['activo', 'Activos'], ['pausa', 'En pausa'], ['terminado', 'Terminados']].map(o => ({ v: o[0], html: o[1] })), v => { F.est = v; sel = 0; pintar(true); q.focus({ preventScroll: true }); });
+          return;
+        }
         const fp = e.target.closest('[data-fproy]');
         if (fp) {
           if (F.pid) { F.pid = ''; sel = 0; pintar(true); q.focus({ preventScroll: true }); return; }

@@ -182,7 +182,7 @@ else $('#welcome').remove();
 /* ---------- tema ---------- */
 const media = matchMedia('(prefers-color-scheme: light)');
 function aplicarTema() {
-  document.documentElement.dataset.vidrio = leerPref('enzo-vidrio', 'claro');
+  document.documentElement.dataset.vidrio = 'tintado';   // el vidrio siempre tintado (más contraste)
   const p = leerPref('enzo-tema', 'auto');
   document.documentElement.dataset.theme = p === 'auto' ? (media.matches ? 'light' : 'dark') : p;
 }
@@ -242,13 +242,10 @@ function hace(t) {
 
 function pintarMenu() {
   const sistema = leerPref('enzo-tema', 'auto') === 'auto';
-  const vidrio = leerPref('enzo-vidrio', 'claro'), vidrios = [['claro', 'Claro'], ['tintado', 'Tintado']];
   const con = api.conectado(), est = store.estado;
   menu.innerHTML = `<h2>Ajustes</h2>
     <div class="field"><label for="m-nombre">Nombre</label><input class="inp" id="m-nombre" maxlength="24" autocomplete="off" value="${esc(nombre())}"></div>
     <div class="sw-row"><span>Seguir al sistema<small>Claro u oscuro como tu ${esMac() ? 'Mac' : 'iPhone'}. ${esMac() ? 'Con la tecla C lo cambias' : 'Toca tu inicial para cambiarlo'} a mano.</small></span><button type="button" class="sw" data-m="sistema" role="switch" aria-checked="${sistema}" aria-label="Seguir al sistema"></button></div>
-    <div class="field" style="margin-top:16px"><span class="lbl">Vidrio</span><div class="seg" style="--n:2;--i:${vidrio === 'tintado' ? 1 : 0}" role="group" aria-label="Vidrio">${vidrios.map(t => `<button data-vidrio="${t[0]}" aria-pressed="${t[0] === vidrio}">${t[1]}</button>`).join('')}</div>
-      <p class="note" style="margin-top:6px">Claro deja ver más el fondo; Tintado da más contraste.</p></div>
     <div class="group">
       <span class="lbl">Sincronización</span>
       <div class="state" data-s="${est.s}"><i></i>${TEXTO_SYNC[est.s]}${est.s === 'ok' ? hace(est.ultimo) : ''}</div>
@@ -268,8 +265,6 @@ menu.addEventListener('change', e => {
   if (e.target.id === 'm-nombre') store.guardar('config', { id: 'nombre', valor: e.target.value.trim() || 'David' });
 });
 menu.addEventListener('click', async e => {
-  const vi = e.target.closest('button[data-vidrio]');
-  if (vi) { fijarPref('enzo-vidrio', vi.dataset.vidrio); aplicarTema(); pintarMenu(); return; }
   const b = e.target.closest('[data-m]'); if (!b) return;
   if (b.dataset.m === 'sistema') {
     const seguir = b.getAttribute('aria-checked') !== 'true';

@@ -110,7 +110,7 @@ svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke
 .glass::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:-1;
   background:radial-gradient(120px 80px at var(--mx,30%) var(--my,0%),rgba(255,255,255,.2),transparent 70%)}
 :root[data-theme="light"] .glass::before{background:radial-gradient(120px 80px at var(--mx,30%) var(--my,0%),rgba(255,255,255,.7),transparent 70%)}
-/* Tintado: superficies con mucho texto, o todo el vidrio si eliges "Tintado" en Ajustes */
+/* Tintado: el vidrio de Enzo siempre es tintado (data-vidrio en <html>) */
 .glass.tint,[data-vidrio="tintado"] .glass{background:var(--g-tint)}
 .glass.tint{-webkit-backdrop-filter:blur(30px) saturate(1.6);backdrop-filter:blur(30px) saturate(1.6)}
 
@@ -1011,11 +1011,11 @@ body.fijo{position:fixed;left:0;right:0;overflow:hidden}
 .spot-chip{flex:none;height:28px;padding:0 12px;border-radius:999px;background:var(--fill);color:var(--on-fill);font-size:var(--t-sec);font-weight:600;display:inline-flex;align-items:center;animation:spot-chip 260ms var(--ease-out)}
 .spot-chip[hidden]{display:none}
 @keyframes spot-chip{from{opacity:0;transform:scale(.8)}}
-/* celular: categorías como píldoras con nombre, en una fila que se desliza */
-.spot-cats{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -12px;padding:2px 12px}
-.spot-cats::-webkit-scrollbar{display:none}
-.spot-cat{flex:none;display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 15px;border-radius:999px;font-size:var(--t-sec);font-weight:600;color:var(--ink2);transition:transform 420ms var(--spring),color 160ms ease}
-.spot-cat svg{width:17px;height:17px}
+/* celular: las cuatro categorías solo con icono, repartidas a lo ancho (el nombre de la elegida va dentro de la barra) */
+.spot-cats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.spot-cat{display:grid;place-items:center;height:46px;border-radius:999px;color:var(--ink2);transition:transform 420ms var(--spring),color 160ms ease}
+.spot-cat span{display:none}
+.spot-cat svg{width:20px;height:20px}
 .spot-cat:active{transform:scale(.94);transition-duration:120ms}
 .spot-cat[aria-pressed="true"]{background:var(--fill);color:var(--on-fill);box-shadow:none}
 .sheet-open #sheet.spot .spot-cat{animation:spot-pop 520ms cubic-bezier(.34,1.56,.64,1) backwards;animation-delay:calc(60ms + var(--i)*45ms)}
@@ -1033,9 +1033,8 @@ body.fijo{position:fixed;left:0;right:0;overflow:hidden}
 @media (min-width:820px){
   .spot-row{flex-direction:row;align-items:center}
   .spot-row .spot-bar{flex:1;min-width:0}
-  .spot-cats{margin:0;padding:0;overflow:visible;gap:10px}
-  .spot-cat{width:60px;height:60px;padding:0;border-radius:50%;justify-content:center}
-  .spot-cat span{display:none}
+  .spot-cats{display:flex;gap:10px}
+  .spot-cat{width:60px;height:60px;border-radius:50%}
   .spot-cat svg{width:21px;height:21px}
   .sheet-open #sheet.spot .spot-cat{animation-name:spot-pop-mac;animation-delay:calc(90ms + var(--i)*55ms)}
   @keyframes spot-pop-mac{from{opacity:0;transform:translateX(calc(-70px - var(--i)*70px)) scale(.4)}}

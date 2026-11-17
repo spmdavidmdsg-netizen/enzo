@@ -16,7 +16,7 @@
 <title>Enzo</title>
 <script>
   /* Aplica el tema antes de pintar para evitar un destello. */
-  (function(){try{var p=localStorage.getItem('enzo-tema')||'auto';var d=p==='auto'?(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'):p;document.documentElement.dataset.theme=d;document.documentElement.dataset.vidrio=localStorage.getItem('enzo-vidrio')||'claro'}catch(e){}})();
+  (function(){try{var p=localStorage.getItem('enzo-tema')||'auto';var d=p==='auto'?(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'):p;document.documentElement.dataset.theme=d;document.documentElement.dataset.vidrio='tintado'}catch(e){}})();
 </script>
 <link rel="stylesheet" href="css/app.css">
 </head>

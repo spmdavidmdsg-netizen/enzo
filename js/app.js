@@ -472,4 +472,14 @@ store.escuchar(() => {
   if (menu.classList.contains('open')) pintarMenu();
 });
 store.iniciar().then(conectarConEnlace);
-if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  /* Versión nueva: el service worker la baja en segundo plano y, al tomar el control, Enzo se recarga solo.
+     Si estás escribiendo, con una hoja abierta o entrenando, espera a que salgas de la app para no perder nada. */
+  const habia = !!navigator.serviceWorker.controller;
+  let pendiente = false;
+  const ocupado = () => hojaAbierta() || document.body.classList.contains('jugando') || !!seccion().mod.pausarRender?.() || !!document.querySelector('.n-ed');
+  const recargar = () => { if (ocupado()) { pendiente = true; return; } location.reload(); };
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (habia) recargar(); });
+  document.addEventListener('visibilitychange', () => { if (pendiente && document.visibilityState === 'hidden') location.reload(); });
+  navigator.serviceWorker.register('sw.js').then(r => r.update()).catch(() => {});
+}

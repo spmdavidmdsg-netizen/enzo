@@ -12,7 +12,9 @@
 var ENTIDADES = {
   actividades: { hoja: 'Actividades', cols: ['id', 'dia', 'nombre', 'inicio', 'dur', 'tipo', 'tolA', 'tolD', 'ida', 'vuelta', 'core', 'ejercicioId', 'actualizado'] },
   registros:   { hoja: 'Registros',   cols: ['id', 'fecha', 'actividadId', 'nombre', 'tipo', 'core', 'hecho', 'actualizado'] },
-  pendientes:  { hoja: 'Pendientes',  cols: ['id', 'titulo', 'notas', 'estado', 'importante', 'fecha', 'pasos', 'rep', 'serie', 'repGenerada', 'orden', 'creado', 'completado', 'actualizado'] },
+  pendientes:  { hoja: 'Pendientes',  cols: ['id', 'titulo', 'notas', 'estado', 'importante', 'fecha', 'pasos', 'rep', 'serie', 'repGenerada', 'orden', 'creado', 'completado', 'proyectoId', 'actualizado'] },
+  proyectos:   { hoja: 'Proyectos',   cols: ['id', 'nombre', 'tipo', 'estado', 'fecha', 'descripcion', 'creado', 'terminado', 'actualizado'] },
+  notas:       { hoja: 'Notas',       cols: ['id', 'titulo', 'cuerpo', 'proyectoId', 'creado', 'actualizado'] },
   followups:   { hoja: 'FollowUps',   cols: ['id', 'pendienteId', 'fecha', 'nota', 'hecho', 'completado', 'actualizado'] },
   ejercicios:  { hoja: 'Ejercicios',  cols: ['id', 'nombre', 'datos', 'actualizado'] },
   sesiones:    { hoja: 'Sesiones',    cols: ['id', 'ejercicioId', 'fecha', 'datos', 'actualizado'] },

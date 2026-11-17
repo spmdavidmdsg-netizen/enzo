@@ -2,6 +2,8 @@
    Quick tasks en tarjetas (tocar la tarjeta = hecha, con 4 s para deshacer; el círculo abre el detalle),
    y a la derecha (Mac) o debajo (celular) Próximas en lista. */
 import { esc, uid, iso, hoy, fechaLarga, fechaCorta, cuando, diasEntre, desdeIso, pieHoja } from '../util.js';
+import { activos, nombreDe, ICONO } from './proyectos.js';
+import { desplegable } from '../desplegable.js';
 
 const ESPERA = 4000;
 const enCurso = new Map();          // id -> { timer, inicio }
@@ -36,7 +38,7 @@ export function generarRepeticiones(store) {
   store.state.pendientes.slice().forEach(t => {
     if (!t.rep || !t.rep.unit || t.repGenerada || !t.fecha || t.fecha > h) return;
     const serie = t.serie || t.id, fecha = siguienteFecha(t.fecha, t.rep);
-    store.guardar('pendientes', { id: serie + '~' + fecha, serie, titulo: t.titulo, notas: t.notas || '', estado: 'pendiente', importante: !!t.importante, fecha, rep: t.rep, repGenerada: false, creado: h });
+    store.guardar('pendientes', { id: serie + '~' + fecha, serie, titulo: t.titulo, notas: t.notas || '', estado: 'pendiente', importante: !!t.importante, fecha, rep: t.rep, repGenerada: false, creado: h, proyectoId: t.proyectoId || '' });
     store.guardar('pendientes', { ...t, repGenerada: true });
   });
 }
@@ -48,7 +50,7 @@ export function render({ store }) {
     <div class="home">
       <section class="sec st" style="--i:1">
         <span class="h">Quick tasks</span>
-        ${q.length ? `<div class="qgrid">${q.map(tarjeta).join('')}</div>`
+        ${q.length ? `<div class="qgrid">${q.map(p => tarjeta(p, s)).join('')}</div>`
           : '<p class="empty">Nada pendiente para hoy. Toca el círculo para anotar algo.</p>'}
       </section>
       <aside class="side st" style="--i:2">
@@ -58,15 +60,15 @@ export function render({ store }) {
     </div>`;
 }
 
-function tarjeta(p) {
-  const c = cuando(p.fecha), e = enCurso.get(p.id);
+function tarjeta(p, s) {
+  const c = cuando(p.fecha), e = enCurso.get(p.id), proy = p.proyectoId ? nombreDe(s, p.proyectoId) : '';
   const resto = e ? Math.max(0, ESPERA - (Date.now() - e.inicio)) : ESPERA;
   return `<article class="qt${e ? ' done' : ''}" data-id="${esc(p.id)}" style="--resto:${resto}ms">
     <div class="qt-inner">
       <div class="qt-face">
         <button class="check" data-abrir="${esc(p.id)}" aria-label="Editar: ${esc(p.titulo)}" title="Editar"></button>
         <button class="qt-hit" data-hecho="${esc(p.id)}" ${e ? 'tabindex="-1"' : ''} aria-label="Marcar como hecho: ${esc(p.titulo)}"><span class="qt-title">${esc(p.titulo)}</span></button>
-        <span class="qt-meta${c.tarde ? ' late' : ''}">${p.importante ? '<i class="imp" title="Importante"></i>' : ''}${c.txt}${p.rep ? ' · ' + esc(textoRep(p.rep).replace('Se repite cada', 'cada')) : ''}</span>
+        <span class="qt-meta${c.tarde ? ' late' : ''}">${p.importante ? '<i class="imp" title="Importante"></i>' : ''}${c.txt}${p.rep ? ' · ' + esc(textoRep(p.rep).replace('Se repite cada', 'cada')) : ''}${proy ? ' · ' + esc(proy) : ''}</span>
       </div>
       <button class="qt-face qt-back" data-deshacer="${esc(p.id)}" ${e ? '' : 'tabindex="-1"'} aria-label="Deshacer: ${esc(p.titulo)}">
         <b>Hecha</b><span><small>Toca para deshacer</small><span class="bar"><i></i></span></span>
@@ -134,10 +136,10 @@ function deshacer(view, id, ctx) {
 }
 
 /* ---------- detalle (nuevo o existente) ---------- */
-export function abrirDetalle(ctx, id, desde) {
+export function abrirDetalle(ctx, id, desde, base = {}) {
   const previo = id ? ctx.store.buscar('pendientes', id) : null;
   if (id && !previo) return;
-  const p = previo ? { ...previo } : { id: uid(), titulo: '', notas: '', estado: 'pendiente', importante: false, fecha: iso(hoy()), rep: null, creado: iso(hoy()) };
+  const p = previo ? { ...previo } : { id: uid(), titulo: '', notas: '', estado: 'pendiente', importante: false, fecha: iso(hoy()), rep: null, creado: iso(hoy()), proyectoId: '', ...base };
   const estados = [['pendiente', 'Pendiente'], ['hecho', 'Hecha']];
   const ei = Math.max(0, estados.findIndex(x => x[0] === p.estado));
   ctx.abrirHoja(`<form id="f-det" novalidate>
@@ -147,6 +149,7 @@ export function abrirDetalle(ctx, id, desde) {
         <div class="field"><label for="d-fecha">Fecha</label><input class="inp" id="d-fecha" name="fecha" type="date" value="${esc(p.fecha || '')}"></div>
         <div class="field"><span class="lbl">Importante</span><button type="button" class="sw" id="d-imp" role="switch" aria-checked="${!!p.importante}" aria-label="Importante"></button></div>
       </div>
+      <div class="field"><span class="lbl" id="d-proy-l">Proyecto</span><button type="button" class="t-sel" id="d-proy" data-valor="${esc(p.proyectoId || '')}" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="d-proy-l d-proy"></button></div>
       <div class="field"><span class="lbl">Estado</span><div class="seg" id="d-estado" style="--n:2;--i:${ei}" role="group" aria-label="Estado">${estados.map((x, i) => `<button type="button" data-i="${i}" data-e="${x[0]}" aria-pressed="${i === ei}">${x[1]}</button>`).join('')}</div></div>
       <div class="field"><label for="d-unidad">Repetir cada</label><div class="rep-row">
         <input class="inp" id="d-n" type="number" min="1" max="365" value="${p.rep ? p.rep.n : 1}" ${p.rep ? '' : 'disabled'} aria-label="Cada cuántos">
@@ -164,6 +167,18 @@ export function abrirDetalle(ctx, id, desde) {
         seg.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
       };
       s.querySelector('#d-unidad').onchange = e => { s.querySelector('#d-n').disabled = !e.target.value; };
+      /* Proyecto: los activos (y el actual aunque esté en pausa o terminado) */
+      const pr = s.querySelector('#d-proy');
+      const pintarProy = () => {
+        const n = pr.dataset.valor ? nombreDe(ctx.store.state, pr.dataset.valor) : '';
+        pr.innerHTML = `${n ? ICONO.carpeta : ''}<span>${n ? esc(n) : 'Sin proyecto'}</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg>`;
+      };
+      pintarProy();
+      pr.onclick = () => {
+        const st = ctx.store.state, lista = activos(st);
+        if (pr.dataset.valor && !lista.some(x => x.id === pr.dataset.valor)) { const x = st.proyectos.find(y => y.id === pr.dataset.valor); if (x) lista.push(x); }
+        desplegable(pr, [{ v: '', actual: !pr.dataset.valor, html: 'Sin proyecto' }, ...lista.map((x, i) => ({ v: x.id, sep: i === 0, actual: x.id === pr.dataset.valor, html: esc(x.nombre) }))], v => { pr.dataset.valor = v; pintarProy(); });
+      };
       f.onsubmit = e => { e.preventDefault(); ctx.cerrarHoja(); };
       const borrar = s.querySelector('[data-borrar]');
       if (borrar) borrar.onclick = () => {
@@ -178,7 +193,8 @@ export function abrirDetalle(ctx, id, desde) {
           titulo: f.titulo.value.trim(), notas: f.notas.value.trim(), fecha: f.fecha.value || '',
           importante: s.querySelector('#d-imp').getAttribute('aria-checked') === 'true',
           estado, completado: estado === 'hecho' ? (p.completado || iso(hoy())) : '',
-          rep: unidad ? { n: Math.min(365, Math.max(1, parseInt(s.querySelector('#d-n').value, 10) || 1)), unit: unidad } : null
+          rep: unidad ? { n: Math.min(365, Math.max(1, parseInt(s.querySelector('#d-n').value, 10) || 1)), unit: unidad } : null,
+          proyectoId: pr.dataset.valor || ''
         };
       };
     },
@@ -186,7 +202,7 @@ export function abrirDetalle(ctx, id, desde) {
       if (p.__borrado || !s.__leer) return;
       const n = s.__leer();
       if (!n.titulo) { if (previo) ctx.toast('El pendiente necesita un nombre; se conservó el anterior.'); return; }
-      const clave = x => JSON.stringify([x.titulo, x.notas || '', x.fecha || '', !!x.importante, x.estado, x.rep || null]);
+      const clave = x => JSON.stringify([x.titulo, x.notas || '', x.fecha || '', !!x.importante, x.estado, x.rep || null, x.proyectoId || '']);
       if (!previo || clave(n) !== clave(previo)) {
         if (previo && JSON.stringify(n.rep) !== JSON.stringify(previo.rep)) n.repGenerada = false;
         ctx.store.guardar('pendientes', n);

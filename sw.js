@@ -2,12 +2,12 @@
    Estrategia: pide la versión nueva a la red, pero si tarda más de 2.5 s (o falla) abre la copia guardada.
    Lo que llegue de la red se guarda igual, para la siguiente vez que abras Enzo.
    Las llamadas a Apps Script no pasan por aquí: son de otro dominio. */
-const VERSION = 'enzo-v23';
+const VERSION = 'enzo-v24';
 const ESPERA_RED = 2500;
 const SHELL = [
   './', 'index.html', 'manifest.json', 'css/app.css',
   'js/app.js', 'js/config.js', 'js/util.js', 'js/store.js', 'js/api.js', 'js/tipos.js',
-  'js/pages/pendientes.js', 'js/pages/rutina.js', 'js/pages/ejercicio.js', 'js/ejercicios.js', 'js/desplegable.js',
+  'js/pages/pendientes.js', 'js/pages/rutina.js', 'js/pages/ejercicio.js', 'js/ejercicios.js', 'js/pages/proyectos.js', 'js/pages/notas.js', 'js/desplegable.js',
   'icons/icon-192.png', 'icons/apple-touch-icon.png'
 ];
 

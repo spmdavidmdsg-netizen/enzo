@@ -4,6 +4,8 @@ import * as store from './store.js';
 import * as api from './api.js';
 import * as pendientes from './pages/pendientes.js';
 import * as rutina from './pages/rutina.js';
+import * as proyectos from './pages/proyectos.js';
+import * as notas from './pages/notas.js';
 import { cargarTipos } from './tipos.js';
 import { VERSION_APP } from './config.js';
 
@@ -15,8 +17,8 @@ const PAGES = [
     { id: 'pendientes', nombre: 'Pendientes', mod: pendientes },
     { id: 'rutina', nombre: 'Rutina', mod: vistaRutina('rutina') }] },
   { id: 'projects', nombre: 'Projects', secciones: [
-    { id: 'proyectos', nombre: 'Proyectos', mod: pronto('Proyectos', 'Aquí vivirán tus proyectos, exploratorios y delimitados, con sus pendientes y notas.') },
-    { id: 'notas', nombre: 'Notas', mod: pronto('Notas', 'Aquí vivirán tus notas, sueltas o de un proyecto.') }] },
+    { id: 'proyectos', nombre: 'Proyectos', mod: proyectos },
+    { id: 'notas', nombre: 'Notas', mod: notas }] },
   { id: 'control', nombre: 'Control', secciones: [
     { id: 'resumen', nombre: 'Resumen', mod: vistaRutina('resumen') },
     { id: 'presupuesto', nombre: 'Presupuesto', mod: pronto('Presupuesto', 'Aquí vivirá tu presupuesto del mes: ingresos, gastos planeados y estimados, y el cuadre al final.') }] }
@@ -32,7 +34,13 @@ const escribiendo = el => el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELEC
 const hojaAbierta = () => document.body.classList.contains('sheet-open');
 
 /* ---------- contexto que reciben las páginas ---------- */
-const ctx = { store, toast, abrirHoja, cerrarHoja, render: () => render(), ir: (p, sec) => ir(p, sec) };
+const ctx = {
+  store, toast, abrirHoja, cerrarHoja, render: () => render(), ir: (p, sec) => ir(p, sec),
+  abrirNota: id => { notas.abrir(id); ir('projects', 'notas'); render(); window.scrollTo(0, 0); },
+  nuevaNota: proyectoId => { ir('projects', 'notas'); notas.nuevo(ctx, null, proyectoId); }
+};
+/* El círculo crea lo propio de cada sección: pendiente, proyecto (o pendiente del proyecto abierto) o nota. */
+const nuevoAqui = desde => { const m = seccion().mod; if (m.nuevo) m.nuevo(ctx, desde); else pendientes.abrirDetalle(ctx, null, desde); };
 
 /* ---------- render ----------
    Cada render crea un contenedor nuevo, así los eventos de la página no se acumulan. */
@@ -48,6 +56,9 @@ function render() {
   if (entrada && !ui.bienvenida) { entrada = false; v.classList.add('enter'); clearTimeout(te); te = setTimeout(() => v.classList.remove('enter'), 900); }
   document.body.dataset.page = sc.id;        // la sección decide qué controles fijos se ven (captura y lupa en Pendientes)
   document.body.dataset.pagina = p.id;
+  if (sc.id !== 'notas') document.body.classList.remove('editando-nota');
+  const fab = $('#fab'), et = sc.mod.etiquetaNuevo ? sc.mod.etiquetaNuevo() : 'Nuevo pendiente';
+  fab.setAttribute('aria-label', et); fab.title = et + ' (N)';
   pintarBarra();
   $('#cap-label').textContent = p.nombre;
   $('#cap-pop').innerHTML = PAGES.map(x => `<button class="pop-item" data-page="${x.id}" aria-current="${x.id === ui.page}">${x.nombre}</button>`).join('');
@@ -138,7 +149,7 @@ $('#cap').addEventListener('click', () => {
   const i = PAGES.findIndex(x => x.id === ui.page);
   ir(PAGES[(i + 1) % PAGES.length].id);
 });
-$('#fab').addEventListener('click', () => pendientes.abrirDetalle(ctx, null, $('#fab')));
+$('#fab').addEventListener('click', () => nuevoAqui($('#fab')));
 $('#cap-pop').addEventListener('click', e => {
   const b = e.target.closest('[data-page]');
   if (b) { capLista(false); ir(b.dataset.page); b.blur(); }
@@ -244,7 +255,7 @@ function pintarMenu() {
         : `<p class="note" style="margin-top:6px">Para guardar en Google Sheets y ver tus datos en todos tus dispositivos, pega aquí tu enlace de conexión.</p>
            <div class="row"><input class="inp" id="m-enlace" placeholder="Enlace de conexión" autocomplete="off" autocapitalize="off" spellcheck="false"><button class="btn p" data-m="conectar">Conectar</button></div>`}
     </div>
-    ${matchMedia('(hover:hover) and (pointer:fine)').matches ? '<p class="note keys-note">Atajos: <kbd>1</kbd> Today · <kbd>2</kbd> Projects · <kbd>3</kbd> Control · <kbd>N</kbd> nuevo pendiente · <kbd>B</kbd> buscar · <kbd>C</kbd> claro u oscuro</p>' : ''}
+    ${matchMedia('(hover:hover) and (pointer:fine)').matches ? '<p class="note keys-note">Atajos: <kbd>1</kbd> Today · <kbd>2</kbd> Projects · <kbd>3</kbd> Control · <kbd>N</kbd> nuevo (pendiente, proyecto o nota) · <kbd>B</kbd> buscar · <kbd>C</kbd> claro u oscuro</p>' : ''}
     <p class="note" style="margin-top:12px;text-align:right">Versión ${VERSION_APP}</p>`;
 }
 
@@ -383,7 +394,7 @@ document.addEventListener('keydown', e => {
   }
   if (e.metaKey || e.ctrlKey || e.altKey || escribiendo(e.target) || hojaAbierta()) return;
   const k = e.key.toLowerCase();
-  if (k === 'n') { e.preventDefault(); pendientes.abrirDetalle(ctx, null, $('#fab')); }
+  if (k === 'n') { e.preventDefault(); nuevoAqui($('#fab')); }
   if (k === 'b') { e.preventDefault(); abrirBuscador(); }
   if (k === 'c') { e.preventDefault(); alternarTema(); }
   const num = PAGES[Number(e.key) - 1];
@@ -434,7 +445,7 @@ let primeraCarga = true;
 store.escuchar(() => {
   cargarTipos(store.state);
   if (primeraCarga) { primeraCarga = false; pendientes.generarRepeticiones(store); if (ui.bienvenida) pintarBienvenida(); }
-  if (!hojaAbierta()) render(); else pintarSync();
+  if (!hojaAbierta() && !seccion().mod.pausarRender?.()) render(); else pintarSync();
   if (menu.classList.contains('open')) pintarMenu();
 });
 store.iniciar().then(conectarConEnlace);

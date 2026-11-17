@@ -4,7 +4,7 @@
    manda el estado completo y reemplaza la copia local. */
 import * as api from './api.js';
 
-export const ENTIDADES = ['actividades', 'registros', 'pendientes', 'followups', 'ejercicios', 'sesiones', 'config'];
+export const ENTIDADES = ['actividades', 'registros', 'pendientes', 'followups', 'ejercicios', 'sesiones', 'proyectos', 'notas', 'config'];
 export const state = Object.fromEntries(ENTIDADES.map(e => [e, []]));
 export const estado = { s: 'local', ultimo: null, error: '' };
 

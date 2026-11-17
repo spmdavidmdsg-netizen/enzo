@@ -3,7 +3,7 @@
    Las actividades de ejercicio de hoy tienen un botón Empezar que abre su rutina de ejercicio.
    Editar rutina arma la semana tipo: actividades por día, huecos libres, empalmes y horas útiles. */
 import { esc, iso, hoy, desdeIso, cap, uid, DIAS, MESES, reduceMotion, pieHoja } from '../util.js';
-import { TIPOS, DIAS_SEMANA, PROTEGIDOS, filasDelDia, analizar, reloj, horas, listaTipos, cargarTipos } from '../tipos.js';
+import { TIPOS, DIAS_SEMANA, PROTEGIDOS, filasDelDia, analizar, reloj, horas, listaTipos, cargarTipos, aMin } from '../tipos.js';
 import { desplegable } from '../desplegable.js';
 import * as ejercicio from './ejercicio.js';
 import { RUTINAS, rutina as rutinaEj } from '../ejercicios.js';
@@ -68,7 +68,7 @@ function dia({ store }) {
       <span class="bk-n">${esc(a.nombre)}${tol.length ? `<small>Tolerancia ${tol.join(', ')}</small>` : ''}${rEj ? `<small>${esc(rEj.nombre)}</small>` : ''}</span>
       <time>${reloj(f.ini)}<br>${reloj(f.ini + f.m)}</time></button>${boton}</li>`;
   }).join('');
-  if (!html) return cab + '<p class="empty st" style="--i:2">Este día no tiene actividades imprescindibles. Márcalas en Editar rutina.</p>';
+  if (!html) return cab + '<p class="empty st" style="--i:2">Este día no tiene actividades en tu Línea Crítica. Márcalas en Editar rutina.</p>';
   return cab + `<ul class="blocks st" style="--i:2">${html}</ul>`;
 }
 
@@ -106,7 +106,7 @@ function editar({ store }) {
     const a = f.a, t = TIPOS[a.tipo] || TIPOS.tarea, emp = info.empalmes[a.id], tol = [];
     if (Number(a.tolA)) tol.push(`${a.tolA} min antes`); if (Number(a.tolD)) tol.push(`${a.tolD} min después`);
     return `<li><button class="bk act edit ${a.core ? 'core' : 'opt'}${emp ? ' choca' : ''}" data-act="${esc(a.id)}" style="--c:${t.color};--t:${t.tinta}" aria-label="Editar ${esc(a.nombre)}">
-      <span class="bk-n">${esc(a.nombre)}<small>${t.l}${a.core ? ' · imprescindible' : ''}${tol.length ? ' · tolerancia ' + tol.join(', ') : ''}</small>${emp ? `<small class="warn">Se empalma con ${esc(emp.join(', '))}</small>` : ''}</span>
+      <span class="bk-n">${esc(a.nombre)}<small>${t.l}${a.core ? ' · Línea Crítica' : ''}${tol.length ? ' · tolerancia ' + tol.join(', ') : ''}</small>${emp ? `<small class="warn">Se empalma con ${esc(emp.join(', '))}</small>` : ''}</span>
       <time>${reloj(f.ini)}<br>${reloj(f.ini + f.m)}</time></button></li>`;
   }).join('');
 
@@ -122,7 +122,7 @@ function editar({ store }) {
         <button class="btn sm glass" data-nueva>Agregar actividad</button>
         <button class="btn sm glass" data-copiar aria-haspopup="listbox" aria-expanded="false">Copiar otro día<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
       </div>
-      <p class="note">${lista.length ? `${nCore} de ${lista.length} son imprescindibles. Toca una actividad para editarla, o un espacio libre para agregar ahí.` : 'Este día está vacío. Agrega una actividad o copia la rutina de otro día.'}</p>
+      <p class="note">${lista.length ? `${nCore} de ${lista.length} están en tu Línea Crítica. Toca una actividad para editarla, o un espacio libre para agregar ahí.` : 'Este día está vacío. Agrega una actividad o copia la rutina de otro día.'}</p>
     </section>
     <ol class="blocks st" style="--i:3">${filas}</ol>`;
 }
@@ -139,11 +139,11 @@ function abrirActividad(ctx, id, base = {}) {
       <div class="field" id="a-ejf" ${a.tipo === 'ejercicio' ? '' : 'hidden'}><span class="lbl" id="a-ej-l">Rutina de ejercicio</span><button type="button" class="t-sel" id="a-ej" data-valor="${esc(a.ejercicioId || '')}" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="a-ej-l a-ej"></button></div>
       <div class="cols">
         <div class="field"><label for="a-inicio">Hora de inicio</label><input class="inp" id="a-inicio" name="inicio" type="time" value="${esc(a.inicio)}"></div>
-        ${num('dur', 'Duración, min', a.dur, 'min="5"')}
+        <div class="field"><label for="a-fin">Hora de término</label><input class="inp" id="a-fin" name="fin" type="time" value="${reloj(aMin(a.inicio) + (Number(a.dur) || 60))}"></div>
         ${num('tolA', 'Tolerancia antes, min', a.tolA)}
         ${num('tolD', 'Tolerancia después, min', a.tolD)}
       </div>
-      <div class="sw-row"><span>Imprescindible<small>Forma parte de tu Línea Crítica</small></span><button type="button" class="sw" id="a-core" role="switch" aria-checked="${!!a.core}" aria-label="Imprescindible"></button></div>
+      <div class="sw-row"><span>Línea Crítica<small>Aparece cuando cambias a la vista Línea Crítica</small></span><button type="button" class="sw" id="a-core" role="switch" aria-checked="${!!a.core}" aria-label="Línea Crítica"></button></div>
       <div class="sw-row"><span>Trayecto<small>Tiempo para llegar y para regresar</small></span><button type="button" class="sw" id="a-tray" role="switch" aria-checked="${tray}" aria-label="Trayecto"></button></div>
       <div class="cols" id="a-trayf" ${tray ? '' : 'hidden'}>${num('ida', 'Ida, min', a.ida)}${num('vuelta', 'Vuelta, min', a.vuelta)}</div>
       ${pieHoja(!!previo)}
@@ -187,7 +187,7 @@ function abrirActividad(ctx, id, base = {}) {
         return {
           ...a, nombre: f.nombre.value.trim(), inicio: f.inicio.value || a.inicio,
           tipo: TIPOS[sel.dataset.valor] ? sel.dataset.valor : 'tarea',
-          dur: Math.max(5, n('dur')), tolA: n('tolA'), tolD: n('tolD'),
+          dur: Math.max(5, (aMin(f.fin.value || reloj(aMin(f.inicio.value || a.inicio) + (Number(a.dur) || 60))) - aMin(f.inicio.value || a.inicio) + 1440) % 1440), tolA: n('tolA'), tolD: n('tolD'),
           ida: conTray ? n('ida') : 0, vuelta: conTray ? n('vuelta') : 0,
           core: s.querySelector('#a-core').getAttribute('aria-checked') === 'true',
           ejercicioId: sel.dataset.valor === 'ejercicio' ? ej.dataset.valor : ''

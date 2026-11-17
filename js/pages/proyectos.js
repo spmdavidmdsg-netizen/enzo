@@ -105,7 +105,7 @@ function detalle(ctx, p) {
       celdas += `<i class="${nivel(v)}" title="${d.getDate()} ${MESES[d.getMonth()].slice(0, 3)}: ${v}"></i>`;
     }
     cuerpo = `<section class="sec st" style="--i:3"><span class="h">Pendientes</span>
-        ${pend.length ? `<div class="p-qg">${pend.map(t => { const c = t.fecha ? cuando(t.fecha) : null; return `<div class="card p-qt"><button class="tl-node" data-tl="${esc(t.id)}" aria-label="Marcar como hecho: ${esc(t.titulo)}"></button><button class="p-qt-b" data-abrir="${esc(t.id)}"><b>${esc(t.titulo)}</b><small class="${c && c.tarde ? 'late' : ''}">${c ? c.txt : 'Sin fecha'}</small></button></div>`; }).join('')}</div>`
+        ${pend.length ? `<div class="qgrid">${pend.map(t => pendientes.tarjeta(t, s, false)).join('')}</div>`
           : '<p class="note">Sin pendientes. Anota lo siguiente que quieras explorar con el círculo.</p>'}</section>
       <section class="sec st" style="--i:4"><span class="h">Constancia · últimas 5 semanas</span>
         <div class="p-mes">${celdas}</div>
@@ -135,6 +135,9 @@ function detalle(ctx, p) {
 
 /* ---------- interacción ---------- */
 export function montar(view, ctx) {
+  /* Tarjetas y filas de pendientes: mismo comportamiento que en Pendientes (tocar = hecho con deshacer,
+     mantener presionado o el círculo = editar) */
+  pendientes.montar(view, ctx);
   view.addEventListener('click', e => {
     const pr = e.target.closest('[data-proy]');
     if (pr) { ui.detalle = pr.dataset.proy; ui.todas = false; ctx.render(); window.scrollTo(0, 0); return; }
@@ -148,10 +151,8 @@ export function montar(view, ctx) {
       ctx.store.guardar('pendientes', { ...t, estado: hecha ? 'pendiente' : 'hecho', completado: hecha ? '' : iso(hoy()) });
       return;
     }
-    const ab = e.target.closest('[data-abrir]');
-    if (ab) { pendientes.abrirDetalle(ctx, ab.dataset.abrir); return; }
     const no = e.target.closest('[data-nota]');
-    if (no) { ctx.abrirNota(no.dataset.nota); return; }
+    if (no) { ctx.abrirNota(no.dataset.nota, ui.detalle); return; }
     if (e.target.closest('[data-nueva-nota]')) { ctx.nuevaNota(ui.detalle); return; }
   });
 }

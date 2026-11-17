@@ -6,11 +6,11 @@ import * as pendientes from './pages/pendientes.js';
 import * as rutina from './pages/rutina.js';
 import * as proyectos from './pages/proyectos.js';
 import * as notas from './pages/notas.js';
+import * as presupuesto from './pages/presupuesto.js';
 import { cargarTipos } from './tipos.js';
 import { VERSION_APP } from './config.js';
 
 /* Páginas del menú (en inglés) y sus secciones (barra de píldora abajo en el celular, arriba en la Mac). */
-const pronto = (titulo, texto) => ({ render: () => `<h1 class="st">${titulo}</h1><p class="empty st" style="--i:1">${texto}</p>` });
 const vistaRutina = v => ({ render: c => rutina.render(c, v), montar: (el, c) => rutina.montar(el, c), ocultaBarra: () => rutina.ocultaBarra(v) });
 const PAGES = [
   { id: 'today', nombre: 'Today', secciones: [
@@ -21,7 +21,7 @@ const PAGES = [
     { id: 'notas', nombre: 'Notas', mod: notas }] },
   { id: 'control', nombre: 'Control', secciones: [
     { id: 'resumen', nombre: 'Resumen', mod: vistaRutina('resumen') },
-    { id: 'presupuesto', nombre: 'Presupuesto', mod: pronto('Presupuesto', 'Aquí vivirá tu presupuesto del mes: ingresos, gastos planeados y estimados, y el cuadre al final.') }] }
+    { id: 'presupuesto', nombre: 'Presupuesto', mod: presupuesto }] }
 ];
 /* Enzo siempre abre en Today › Pendientes; dentro de la sesión cada página recuerda su sección. */
 const ui = { page: 'today', sec: { today: 'pendientes', projects: 'proyectos', control: 'resumen' }, bienvenida: !new URLSearchParams(location.search).has('sinbienvenida') };
@@ -36,8 +36,9 @@ const hojaAbierta = () => document.body.classList.contains('sheet-open');
 /* ---------- contexto que reciben las páginas ---------- */
 const ctx = {
   store, toast, abrirHoja, cerrarHoja, render: () => render(), ir: (p, sec) => ir(p, sec),
-  abrirNota: id => { notas.abrir(id); ir('projects', 'notas'); render(); window.scrollTo(0, 0); },
-  nuevaNota: proyectoId => { ir('projects', 'notas'); notas.nuevo(ctx, null, proyectoId); }
+  abrirNota: (id, origen) => { notas.abrir(id, origen); ir('projects', 'notas'); render(); window.scrollTo(0, 0); },
+  nuevaNota: proyectoId => { ir('projects', 'notas'); notas.nuevo(ctx, null, proyectoId, proyectoId); },
+  verProyecto: id => { proyectos.verProyecto(id); ir('projects', 'proyectos'); render(); window.scrollTo(0, 0); }
 };
 /* El círculo crea lo propio de cada sección: pendiente, proyecto (o pendiente del proyecto abierto) o nota. */
 const nuevoAqui = desde => { const m = seccion().mod; if (m.nuevo) m.nuevo(ctx, desde); else pendientes.abrirDetalle(ctx, null, desde); };

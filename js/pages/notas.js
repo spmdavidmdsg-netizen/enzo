@@ -7,7 +7,7 @@ import { esc, uid, iso, hoy, DIAS, MESES, cap } from '../util.js';
 import { activos, nombreDe, ICONO } from './proyectos.js';
 import { desplegable } from '../desplegable.js';
 
-const ui = { abierta: null, q: '', estilos: false };
+const ui = { abierta: null, q: '', estilos: false, origen: null };   // origen: proyecto desde el que abriste la nota
 let borrador = null;      // nota nueva que aún no tiene nada escrito
 let ctxG = null, tGuardar = null;
 const esMac = () => matchMedia('(min-width:820px)').matches;
@@ -101,13 +101,14 @@ const I = {
   chev: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg>',
   lista: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="7" r="1"/><circle cx="5" cy="12" r="1"/><circle cx="5" cy="17" r="1"/><path d="M9 7h11M9 12h11M9 17h11"/></svg>',
   chk: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M8.5 12.2l2.4 2.4 4.6-4.8"/></svg>',
-  mas: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="18" cy="12" r="1.2"/></svg>'
+  basura: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h16M9.5 6.5V4.8c0-.7.6-1.3 1.3-1.3h2.4c.7 0 1.3.6 1.3 1.3v1.7M6.2 6.5l.9 12.6c.1 1 .9 1.9 2 1.9h5.8c1 0 1.9-.8 2-1.9l.9-12.6M10.2 10.5v6.5M13.8 10.5v6.5"/></svg>'
 };
 function editor(s, n) {
   const d = cuando(n), pr = n.proyectoId ? nombreDe(s, n.proyectoId) : '';
   return `<article class="n-ed" data-id="${esc(n.id)}">
     <div class="n-top"><button class="c-btn glass n-volver" data-n-volver aria-label="Volver a tus notas" title="Volver">${I.atras}</button>
-      <button class="n-proy glass" data-n-proy aria-haspopup="listbox" aria-expanded="false" title="Proyecto de la nota">${ICONO.carpeta}<span>${pr ? esc(pr) : 'Sin proyecto'}</span>${I.chev}</button></div>
+      <span class="n-acc"><button class="c-btn glass del" data-cmd="borrar" aria-label="Borrar nota" title="Borrar nota" aria-haspopup="listbox" aria-expanded="false">${I.basura}</button>
+      <button class="n-proy glass" data-n-proy aria-haspopup="listbox" aria-expanded="false" title="Proyecto de la nota">${ICONO.carpeta}<span>${pr ? esc(pr) : 'Sin proyecto'}</span>${I.chev}</button></span></div>
     <div class="n-estilos glass tint" ${ui.estilos ? '' : 'hidden'}>
       <div class="n-f1"><button data-cmd="h2">Título</button><button data-cmd="h3">Subtítulo</button><button data-cmd="p">Texto</button></div>
       <div class="n-f2"><button data-cmd="b" aria-label="Negrita"><b>B</b></button><button data-cmd="i" aria-label="Cursiva"><i>I</i></button><button data-cmd="u" aria-label="Subrayado"><u>U</u></button><button data-cmd="s" aria-label="Tachado"><s>S</s></button></div>
@@ -118,7 +119,6 @@ function editor(s, n) {
       <button data-cmd="ul" aria-label="Lista">${I.lista}</button>
       <button data-cmd="chk" aria-label="Casillas">${I.chk}</button>
       <button data-cmd="b" aria-label="Negrita"><b>B</b></button>
-      <button data-cmd="mas" aria-label="Más opciones" aria-haspopup="listbox" aria-expanded="false">${I.mas}</button>
     </div>
     <p class="n-fecha">${d.getDate()} de ${MESES[d.getMonth()]} de ${d.getFullYear()}, ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}</p>
     <input class="n-titulo" data-n-titulo value="${esc(n.titulo || '')}" placeholder="Título" aria-label="Título de la nota" autocomplete="off" enterkeyhint="next">
@@ -151,16 +151,16 @@ function cerrarNota(ctx) {
   guardarYa();
   const n = buscarNota(ctx.store.state, ui.abierta);
   if (n && !n.titulo && !n.cuerpo && ctx.store.buscar('notas', n.id)) ctx.store.borrar('notas', n.id);
-  borrador = null; ui.abierta = null; ui.estilos = false;
+  borrador = null; ui.abierta = null; ui.estilos = false; ui.origen = null;
 }
 
 /* ---------- abrir y crear (también desde Proyectos) ---------- */
-export function abrir(id) { if (ctxG) guardarYa(); borrador = null; ui.abierta = id; ui.estilos = false; }
-export function nuevo(ctx, desde, proyectoId = '') {
+export function abrir(id, origen = null) { if (ctxG) guardarYa(); borrador = null; ui.abierta = id; ui.estilos = false; ui.origen = origen; }
+export function nuevo(ctx, desde, proyectoId = '', origen = null) {
   ctxG = ctx;
   if (ui.abierta) cerrarNota(ctx);
   borrador = { id: uid(), titulo: '', cuerpo: '', proyectoId: proyectoId || '', creado: iso(hoy()), actualizado: Date.now() };
-  ui.abierta = borrador.id; ui.q = '';
+  ui.abierta = borrador.id; ui.q = ''; ui.origen = origen;
   ctx.render(); window.scrollTo(0, 0);
   document.querySelector('[data-n-titulo]')?.focus();   // en el mismo toque, para que el iPhone abra el teclado
 }
@@ -242,8 +242,13 @@ export function montar(view, ctx) {
   });
   view.addEventListener('click', e => {
     const it = e.target.closest('[data-nota]');
-    if (it) { if (ui.abierta) cerrarNota(ctx); ui.abierta = it.dataset.nota; ctx.render(); if (!esMac()) window.scrollTo(0, 0); return; }
-    if (e.target.closest('[data-n-volver]')) { cerrarNota(ctx); ctx.render(); window.scrollTo(0, 0); return; }
+    if (it) { if (ui.abierta) cerrarNota(ctx); ui.abierta = it.dataset.nota; ui.origen = null; ctx.render(); if (!esMac()) window.scrollTo(0, 0); return; }
+    if (e.target.closest('[data-n-volver]')) {
+      const origen = ui.origen;
+      cerrarNota(ctx);
+      if (origen) { ctx.verProyecto(origen); return; }   // volver al proyecto desde el que entraste
+      ctx.render(); window.scrollTo(0, 0); return;
+    }
     if (e.target.closest('[data-n-resto]')) {
       const c = cuerpoEl(); if (!c) return;
       c.focus({ preventScroll: true });
@@ -276,7 +281,7 @@ export function montar(view, ctx) {
 function accion(b, view, ctx) {
     const cmd = b.dataset.cmd;
     if (cmd === 'aa') { ui.estilos = !ui.estilos; view.querySelector('.n-estilos').hidden = !ui.estilos; b.setAttribute('aria-expanded', ui.estilos); return; }
-    if (cmd === 'mas') {
+    if (cmd === 'borrar') {
       desplegable(b, [{ v: 'borrar', html: '<span class="rojo">Borrar nota</span>' }], v => {
         if (v !== 'borrar') return;
         const n = buscarNota(ctx.store.state, ui.abierta); if (!n) return;

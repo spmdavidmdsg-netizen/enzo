@@ -15,14 +15,16 @@ var ENTIDADES = {
   pendientes:  { hoja: 'Pendientes',  cols: ['id', 'titulo', 'notas', 'estado', 'importante', 'fecha', 'pasos', 'rep', 'serie', 'repGenerada', 'orden', 'creado', 'completado', 'proyectoId', 'actualizado'] },
   proyectos:   { hoja: 'Proyectos',   cols: ['id', 'nombre', 'tipo', 'estado', 'fecha', 'descripcion', 'creado', 'terminado', 'actualizado'] },
   notas:       { hoja: 'Notas',       cols: ['id', 'titulo', 'cuerpo', 'proyectoId', 'creado', 'actualizado'] },
+  partidas:    { hoja: 'Presupuesto', cols: ['id', 'mes', 'tipo', 'nombre', 'monto', 'modo', 'categoria', 'repetir', 'real', 'origen', 'orden', 'actualizado'] },
+  meses:       { hoja: 'Meses',       cols: ['id', 'inicial', 'final', 'actualizado'] },
   followups:   { hoja: 'FollowUps',   cols: ['id', 'pendienteId', 'fecha', 'nota', 'hecho', 'completado', 'actualizado'] },
   ejercicios:  { hoja: 'Ejercicios',  cols: ['id', 'nombre', 'datos', 'actualizado'] },
   sesiones:    { hoja: 'Sesiones',    cols: ['id', 'ejercicioId', 'fecha', 'datos', 'actualizado'] },
   config:      { hoja: 'Config',      cols: ['id', 'valor', 'actualizado'] }
 };
 var JSON_COLS = { pasos: [], rep: null, datos: null };
-var BOOL_COLS = { core: 1, hecho: 1, importante: 1, repGenerada: 1 };
-var NUM_COLS  = { dur: 1, tolA: 1, tolD: 1, ida: 1, vuelta: 1, orden: 1, actualizado: 1 };
+var BOOL_COLS = { core: 1, hecho: 1, importante: 1, repGenerada: 1, repetir: 1 };
+var NUM_COLS  = { dur: 1, tolA: 1, tolD: 1, ida: 1, vuelta: 1, orden: 1, monto: 1, actualizado: 1 };
 
 /* ------------------------------------------------------------ web app */
 

@@ -1,7 +1,7 @@
 /* Pendientes: igual que el inicio del task manager.
    Quick tasks en tarjetas (tocar la tarjeta = hecha, con 4 s para deshacer; el círculo abre el detalle),
    y a la derecha (Mac) o debajo (celular) Próximas en lista. */
-import { esc, uid, iso, hoy, fechaLarga, fechaCorta, cuando, diasEntre, desdeIso, pieHoja } from '../util.js';
+import { esc, uid, iso, hoy, fechaLarga, fechaCorta, cuando, diasEntre, desdeIso, pieHoja, MESES, cap } from '../util.js';
 import { activos, nombreDe, ICONO } from './proyectos.js';
 import { desplegable } from '../desplegable.js';
 
@@ -43,9 +43,43 @@ export function generarRepeticiones(store) {
   });
 }
 
+/* ---------- hechas ---------- */
+const ui = { hechas: false };
+const CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
+const hechas = s => s.pendientes.filter(p => p.estado === 'hecho').sort((a, b) => String(b.completado || '').localeCompare(String(a.completado || '')) || String(b.actualizado || '').localeCompare(String(a.actualizado || '')));
+const filaHecha = (p, s) => {
+  const pr = p.proyectoId ? nombreDe(s, p.proyectoId) : '';
+  return `<div class="h-row"><button class="h-node" data-reabrir="${esc(p.id)}" aria-label="Reabrir: ${esc(p.titulo)}" title="Reabrir">${CHECK}</button>
+    <button class="h-main" data-abrir="${esc(p.id)}"><span>${esc(p.titulo)}${pr ? `<small>${esc(pr)}</small>` : ''}</span><em>${p.completado ? fechaCorta(p.completado) : ''}</em></button></div>`;
+};
+function grupoHecha(f) {
+  if (!f) return 'Sin fecha';
+  const n = diasEntre(f, iso(hoy())), d = desdeIso(f), h = hoy();
+  if (n <= 0) return 'Hoy';
+  if (n === 1) return 'Ayer';
+  if (n < 7) return 'Esta semana';
+  if (d.getFullYear() === h.getFullYear() && d.getMonth() === h.getMonth()) return 'Este mes';
+  return cap(MESES[d.getMonth()]) + (d.getFullYear() !== h.getFullYear() ? ' ' + d.getFullYear() : '');
+}
+function vistaHechas(s) {
+  const lista = hechas(s);
+  let html = '', g = null;
+  lista.forEach(p => {
+    const k = grupoHecha(p.completado);
+    if (k !== g) { html += `${g ? '</div>' : ''}<span class="h h-g">${k}</span><div class="card h-lista">`; g = k; }
+    html += filaHecha(p, s);
+  });
+  return `<div class="e-head st"><button class="c-btn glass" data-volver-h aria-label="Volver a pendientes" title="Volver"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><h1>Hechas</h1></div>
+    <p class="note st" style="--i:1;margin-top:8px">${lista.length} ${lista.length === 1 ? 'pendiente hecho' : 'pendientes hechos'}. Toca la palomita para reabrir uno.</p>
+    <div class="hechas st" style="--i:2">${html ? html + '</div>' : '<p class="empty">Aún no marcas pendientes como hechos.</p>'}</div>`;
+}
+export const ocultaBarra = () => ui.hechas;
+
 /* ---------- vista ---------- */
 export function render({ store }) {
   const s = store.state, q = quick(s), px = proximas(s);
+  if (ui.hechas) return `<div class="h-vista">${vistaHechas(s)}</div>`;
+  const ult = hechas(s).slice(0, 5);
   return `<h1 class="st">${fechaLarga(hoy())}</h1>
     <div class="home">
       <section class="sec st" style="--i:1">
@@ -56,12 +90,15 @@ export function render({ store }) {
       <aside class="side st" style="--i:2">
         <section><span class="h">Próximas</span>
           ${px.length ? px.map(fila).join('') : '<p class="side-empty">Nada programado para los próximos días.</p>'}</section>
+        ${ult.length ? `<section class="h-ult"><span class="h">Hechas</span>${ult.map(p => filaHecha(p, s)).join('')}
+          <button class="btn sm q h-ver" data-ver-hechas>Ver todas</button></section>` : ''}
       </aside>
     </div>`;
 }
 
-function tarjeta(p, s) {
-  const c = cuando(p.fecha), e = enCurso.get(p.id), proy = p.proyectoId ? nombreDe(s, p.proyectoId) : '';
+/* Tarjeta de Quick task; también la usan los proyectos exploratorios (sin repetir el nombre del proyecto). */
+export function tarjeta(p, s, conProyecto = true) {
+  const c = cuando(p.fecha), e = enCurso.get(p.id), proy = conProyecto && p.proyectoId ? nombreDe(s, p.proyectoId) : '';
   const resto = e ? Math.max(0, ESPERA - (Date.now() - e.inicio)) : ESPERA;
   return `<article class="qt${e ? ' done' : ''}" data-id="${esc(p.id)}" style="--resto:${resto}ms">
     <div class="qt-inner">
@@ -97,6 +134,15 @@ export function montar(view, ctx) {
   view.addEventListener('contextmenu', e => { if (e.target.closest('.qt')) e.preventDefault(); });
   view.addEventListener('click', e => {
     if (usado) { usado = false; e.preventDefault(); return; }
+    if (e.target.closest('[data-ver-hechas]')) { ui.hechas = true; ctx.render(); window.scrollTo(0, 0); return; }
+    if (e.target.closest('[data-volver-h]')) { ui.hechas = false; ctx.render(); window.scrollTo(0, 0); return; }
+    const re = e.target.closest('[data-reabrir]');
+    if (re) {
+      const p = ctx.store.buscar('pendientes', re.dataset.reabrir); if (!p) return;
+      ctx.store.guardar('pendientes', { ...p, estado: 'pendiente', completado: '' });
+      ctx.toast('Pendiente reabierto', () => ctx.store.guardar('pendientes', p));
+      return;
+    }
     const abrir = e.target.closest('[data-abrir]');
     if (abrir) { abrirDetalle(ctx, abrir.dataset.abrir); return; }
     const des = e.target.closest('[data-deshacer]');

@@ -123,6 +123,7 @@ function editor(s, n) {
     <p class="n-fecha">${d.getDate()} de ${MESES[d.getMonth()]} de ${d.getFullYear()}, ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}</p>
     <input class="n-titulo" data-n-titulo value="${esc(n.titulo || '')}" placeholder="Título" aria-label="Título de la nota" autocomplete="off" enterkeyhint="next">
     <div class="n-cuerpo" contenteditable="true" data-n-cuerpo data-ph="Escribe aquí…" role="textbox" aria-multiline="true" aria-label="Contenido de la nota">${limpiar(n.cuerpo)}</div>
+    <div class="n-resto" data-n-resto aria-hidden="true"></div>
   </article>`;
 }
 
@@ -212,6 +213,7 @@ export function montar(view, ctx) {
     if (e.target.closest('.n-ed')) { guardarPronto(); if (e.target.closest('[data-n-cuerpo]')) verCursor(); }
   });
   /* Al salir de la nota se guarda; pasar del título al texto no cuenta como salir (guardar ahí redibujaría la nota) */
+  view.addEventListener('focusin', e => { if (e.target.closest?.('[data-n-cuerpo]')) setTimeout(verCursor, 350); });
   view.addEventListener('focusout', e => {
     const ed = e.target.closest?.('.n-ed'); if (!ed) return;
     setTimeout(() => { if (!ed.isConnected || !ed.contains(document.activeElement)) guardarYa(); }, 0);
@@ -242,6 +244,13 @@ export function montar(view, ctx) {
     const it = e.target.closest('[data-nota]');
     if (it) { if (ui.abierta) cerrarNota(ctx); ui.abierta = it.dataset.nota; ctx.render(); if (!esMac()) window.scrollTo(0, 0); return; }
     if (e.target.closest('[data-n-volver]')) { cerrarNota(ctx); ctx.render(); window.scrollTo(0, 0); return; }
+    if (e.target.closest('[data-n-resto]')) {
+      const c = cuerpoEl(); if (!c) return;
+      c.focus({ preventScroll: true });
+      const r = document.createRange(); r.selectNodeContents(c); r.collapse(false);
+      const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+      return;
+    }
     /* Casillas: tocar el círculo marca o desmarca */
     const li = e.target.closest('[data-n-cuerpo] ul.chk > li');
     if (li && e.clientX - li.getBoundingClientRect().left < 30) { e.preventDefault(); li.classList.toggle('ok'); guardarPronto(); return; }

@@ -861,7 +861,7 @@ button.c-day:active{transform:scale(.94);transition-duration:120ms}
 .n-fecha{text-align:center;font-size:var(--t-small);color:var(--ink3);margin-top:14px}
 .n-titulo{display:block;width:100%;margin-top:10px;border:0;outline:0;background:none;font-size:1.6rem;font-weight:700;letter-spacing:-.02em;color:var(--ink);padding:0}
 .n-titulo::placeholder{color:var(--ink3)}
-.n-cuerpo{min-height:50vh;margin-top:8px;padding-bottom:120px;outline:0;font-size:1rem;line-height:1.55;-webkit-user-select:text;user-select:text}
+.n-cuerpo{min-height:3em;margin-top:8px;padding-bottom:8px;outline:0;font-size:1rem;line-height:1.55;-webkit-user-select:text;user-select:text}
 .n-cuerpo:empty::before{content:attr(data-ph);color:var(--ink3)}
 .n-cuerpo h2{font-size:1.35rem;font-weight:700;letter-spacing:-.015em;margin:14px 0 4px}
 .n-cuerpo h3{font-size:1.06rem;font-weight:700;margin:12px 0 2px}
@@ -903,7 +903,7 @@ button.c-day:active{transform:scale(.94);transition-duration:120ms}
   .n-bar button{height:30px;min-width:34px}
   .n-bar svg{width:17px;height:17px}
   .n-estilos{position:absolute;left:26px;right:auto;top:66px;bottom:auto;width:320px}
-  .n-cuerpo{min-height:40vh;padding-bottom:40px}
+  .n-cuerpo{min-height:6em}
   .n-item[aria-current="true"]{background:var(--field-hi);border-radius:12px;margin:0 -10px;padding:11px 10px;border-top-color:transparent}
   .n-item[aria-current="true"]+.n-item{border-top-color:transparent}
 }
@@ -917,3 +917,8 @@ body.fijo{position:fixed;left:0;right:0;overflow:hidden}
   .con-teclado .n-estilos{bottom:calc(var(--teclado) + 62px)}
 }
 .n-bar button.pulsado,.n-estilos button.pulsado{background:var(--field-hi)}
+
+/* Espacio libre debajo del texto de la nota: tocarlo pone el cursor al final.
+   No es parte del texto, así iOS no se desplaza hasta él al abrir el teclado. */
+.n-resto{min-height:45vh;cursor:text}
+@media (min-width:820px){.n-resto{min-height:30vh}}

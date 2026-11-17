@@ -233,7 +233,8 @@ body:not([data-page="pendientes"]) :is(.fab,.lupa){display:none}
 /* Sin bordes: las imprescindibles van rellenas de su color con un filo suave del acento;
    las demás, fondo neutro con un punto del color de su tipo */
 .bk.core{background:var(--c);color:var(--t);border:1px solid color-mix(in srgb,var(--accent) 50%,transparent)}
-.bk.opt{background:var(--card);color:var(--ink);border:1px solid transparent}
+/* Todas las actividades llevan el color de su tipo; las imprescindibles suman el borde de acento */
+.bk.opt{background:var(--c);color:var(--t);border:1px solid transparent}
 .bk .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--c);margin-right:8px;vertical-align:.08em;box-shadow:inset 0 0 0 1px rgba(127,127,127,.35)}
 .bk.tray{padding:6px 16px;font-weight:500;font-size:var(--t-sec);color:var(--ink3);background:var(--field)}
 .bk.crit{background:var(--card);border:1px solid var(--line);color:var(--ink);padding:14px 16px}
@@ -765,3 +766,8 @@ button.c-day:active{transform:scale(.94);transition-duration:120ms}
 .ej-go svg{width:14px;height:14px;fill:currentColor;stroke-width:1.5}
 @media (hover:hover) and (pointer:fine){.ej-go:hover{filter:brightness(1.08)}}
 .dd .rojo{color:var(--danger)}
+
+/* Ejercicio en el Resumen del mes */
+.sec .ej-cargas{margin-top:8px}
+.ej-cargas>.h{display:block;padding:8px 0 2px}
+.ej-cargas>.h+div{border-top:0}

@@ -34,6 +34,36 @@ const ultima = (s, id) => s.sesiones.filter(x => x.ejercicioId === id).sort((a, 
 export const enCurso = () => act ? act.rid : null;
 export function continuar(ctx) { ctxG = ctx; if (act) abrirJugador(); }
 
+/* ---------- sección Ejercicio del Resumen del mes ---------- */
+export function resumenMes(sesiones, y, m) {
+  const pre = `${y}-${String(m + 1).padStart(2, '0')}`;
+  const mes = sesiones.filter(x => String(x.fecha).startsWith(pre)).sort((a, b) => a.fecha.localeCompare(b.fecha));
+  if (!mes.length) return '<p class="note">Sin sesiones de ejercicio este mes. Se llenan al terminar una rutina desde tu día.</p>';
+  const min = Math.round(mes.reduce((t, x) => t + (Number(x.datos?.dur) || 0), 0) / 60);
+  const reps = mes.reduce((t, x) => t + (Number(x.datos?.reps) || 0), 0);
+  const tiempo = min >= 60 ? `${Math.floor(min / 60)} h ${String(min % 60).padStart(2, '0')}` : `${min} min`;
+  const corta = f => { const d = new Date(f + 'T00:00:00'); return `${d.getDate()} ${MESES[d.getMonth()].slice(0, 3)}`; };
+  /* Cada rutina: cuántas veces y la última */
+  const porRutina = {};
+  mes.forEach(x => { (porRutina[x.ejercicioId] = porRutina[x.ejercicioId] || []).push(x); });
+  const filas = Object.entries(porRutina).map(([id, xs]) => `<div><span>${esc(rutina(id)?.nombre || xs[0].datos?.nombre || id)}</span><em>${xs.length} ${xs.length === 1 ? 'vez' : 'veces'} · última ${corta(xs[xs.length - 1].fecha)}</em></div>`).join('');
+  /* Cargas: el peso más alto de cada ejercicio con mancuernas, al inicio y al final del mes */
+  const pesos = {};
+  mes.forEach(x => (x.datos?.log || []).forEach(l => {
+    if (!l.hecho || !Number(l.kg)) return;
+    const r = rutina(x.ejercicioId), e = r && r.bloques.flatMap(b => b.ejercicios).find(q => q.id === l.id);
+    const k = e ? e.n : l.id, p = (pesos[k] = pesos[k] || { primero: null, ultimo: null, fecha: null });
+    if (p.fecha !== x.fecha) { if (p.primero == null) p.primero = Number(l.kg); p.fecha = x.fecha; p.ultimo = Number(l.kg); }
+    else p.ultimo = Math.max(p.ultimo, Number(l.kg));
+  }));
+  const cargas = Object.entries(pesos).map(([n, p]) => {
+    const d = p.ultimo - p.primero;
+    return `<div><span>${esc(n)}</span><em>${p.ultimo} kg${d ? ` · ${d > 0 ? '+' : ''}${d} kg en el mes` : ''}</em></div>`;
+  }).join('');
+  return `<div class="ej-stats"><div class="card"><b>${mes.length}</b><span>${mes.length === 1 ? 'sesión' : 'sesiones'}</span></div><div class="card"><b>${tiempo}</b><span>entrenando</span></div><div class="card"><b>${reps}</b><span>repeticiones</span></div></div>
+    <div class="card ej-cargas">${filas}</div>${cargas ? `<div class="card ej-cargas"><span class="h">Cargas</span>${cargas}</div>` : ''}`;
+}
+
 /* ---------- reproductor ---------- */
 export function empezar(ctx, id) {
   ctxG = ctx;

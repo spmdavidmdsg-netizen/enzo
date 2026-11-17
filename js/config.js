@@ -6,4 +6,4 @@ const PRODUCCION = 'https://script.google.com/macros/s/AKfycbwFm3W7Dnd9-_sv7mgns
 export const API_URL = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? 'http://127.0.0.1:4301/exec' : PRODUCCION;
 
 /* Versión de la app, visible al pie de Ajustes (súbela junto con VERSION en sw.js). */
-export const VERSION_APP = 22;
+export const VERSION_APP = 23;

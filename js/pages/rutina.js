@@ -65,7 +65,7 @@ function dia({ store }) {
     const rEj = a.tipo === 'ejercicio' ? rutinaEj(a.ejercicioId) : null;
     const boton = a.tipo === 'ejercicio' && esHoy ? botonEjercicio(a) : '';
     return `<li${boton ? ' class="con-ej"' : ''}><button class="bk act ${a.core ? 'core' : 'opt'}" data-reg="${esc(a.id)}" aria-pressed="${hechos.has(a.id)}" ${futuro ? 'disabled' : ''} style="--c:${t.color};--t:${t.tinta}">
-      <span class="bk-n">${a.core ? '' : '<i class="dot" aria-hidden="true"></i>'}${esc(a.nombre)}${tol.length ? `<small>Tolerancia ${tol.join(', ')}</small>` : ''}${rEj ? `<small>${esc(rEj.nombre)}</small>` : ''}</span>
+      <span class="bk-n">${esc(a.nombre)}${tol.length ? `<small>Tolerancia ${tol.join(', ')}</small>` : ''}${rEj ? `<small>${esc(rEj.nombre)}</small>` : ''}</span>
       <time>${reloj(f.ini)}<br>${reloj(f.ini + f.m)}</time></button>${boton}</li>`;
   }).join('');
   if (!html) return cab + '<p class="empty st" style="--i:2">Este día no tiene actividades imprescindibles. Márcalas en Editar rutina.</p>';
@@ -432,5 +432,6 @@ function resumen({ store }) {
       <div class="graph" style="--w:${semanas}"><div class="g-meses" aria-hidden="true">${meses}</div><div class="g-cells">${celdas}</div></div>
       <div class="escala" aria-hidden="true"><span>Menos</span><i class="cg l0"></i><i class="cg l1"></i><i class="cg l2"></i><i class="cg l3"></i><i class="cg l4"></i><span>Más</span><i class="cg l2 crit"></i><span>Línea Crítica</span></div></section>
     <section class="sec st" style="--i:3"><span class="h">Calendario</span><div class="cal">${cal}</div></section>
-    <section class="sec st" style="--i:4"><span class="h">Heatmap por tipo</span><div class="heatwrap"><div class="heat" style="--n:${n}">${heat}</div></div>${usados.length ? '' : '<p class="note" style="margin-top:8px">Se llena cuando tu rutina tenga actividades y las marques como hechas.</p>'}</section>`;
+    <section class="sec st" style="--i:4"><span class="h">Heatmap por tipo</span><div class="heatwrap"><div class="heat" style="--n:${n}">${heat}</div></div>${usados.length ? '' : '<p class="note" style="margin-top:8px">Se llena cuando tu rutina tenga actividades y las marques como hechas.</p>'}</section>
+    <section class="sec st" style="--i:5"><span class="h">Ejercicio</span>${ejercicio.resumenMes(s.sesiones, y, m)}</section>`;
 }

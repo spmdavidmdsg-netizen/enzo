@@ -310,6 +310,12 @@ body:not([data-page="pendientes"]) .lupa,body:not(:is([data-page="pendientes"],[
 .vt-pagina .rbar{view-transition-name:barra-rutina}
 ::view-transition-old(barra-sup),::view-transition-old(barra-rutina){display:none}
 ::view-transition-new(barra-sup),::view-transition-new(barra-rutina){animation:none}
+/* La foto que el navegador toma de la barra para la transición no respeta las esquinas redondas del
+   desenfoque del vidrio y deja ver un cuadro detrás. Durante esos 240 ms el vidrio va sin desenfoque
+   (el tintado es casi opaco) y la barra no se estira: aparece directo con su tamaño nuevo. */
+.vt-pagina :is(.rbar,.top .glass){-webkit-backdrop-filter:none;backdrop-filter:none}
+.vt-pagina .rbar{background:var(--g-tint)}
+::view-transition-group(barra-rutina),::view-transition-group(barra-sup){animation:none}
 
 /* ---------- detalle ---------- */
 .area{height:auto;min-height:76px;padding:12px 14px;resize:vertical;line-height:1.45;margin-bottom:16px}
